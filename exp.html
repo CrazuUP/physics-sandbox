@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Название эксперимента - Симуляция физических экспериментов</title>
+    <link rel="stylesheet" href="css/experiment-styles.css">
+</head>
+<body>
+<!-- Шапка сайта -->
+<header>
+    <h1>Название эксперимента</h1>
+    <div class="creators">Создатели: Ипантьев Иван, Гончаров Максим, Ахроров Кароматуллохон</div>
+</header>
+
+<!-- Основной контент -->
+<div class="container">
+    <h2>Описание эксперимента</h2>
+    <p>Здесь разместите описание выбранного физического эксперимента, его цели и задачи.</p>
+
+    <div class="simulation-area">
+        <h3>Область симуляции</h3>
+        <p>Здесь будет размещена интерактивная симуляция эксперимента.</p>
+        <!-- Здесь будет код симуляции (Canvas, SVG или другие технологии) -->
+        <canvas id="simulation-canvas" width="800" height="400"></canvas>
+    </div>
+
+    <div class="controls">
+        <h3>Управление параметрами</h3>
+        <p>Здесь будут элементы управления для изменения параметров эксперимента.</p>
+
+        <div class="parameter-control">
+            <label for="param1">Параметр 1:</label>
+            <input type="range" id="param1" min="0" max="100" value="50">
+            <span class="value-display" id="param1-value">50</span>
+        </div>
+
+        <div class="parameter-control">
+            <label for="param2">Параметр 2:</label>
+            <input type="range" id="param2" min="0" max="100" value="25">
+            <span class="value-display" id="param2-value">25</span>
+        </div>
+
+        <button id="start-btn" class="action-btn">Запуск симуляции</button>
+        <button id="reset-btn" class="action-btn">Сброс</button>
+    </div>
+
+    <button class="back-btn" onclick="window.location.href='index.html'">← Вернуться к списку экспериментов</button>
+</div>
+
+<!-- Подвал сайта -->
+<footer>
+    <p>© 2023 Симуляция физических экспериментов</p>
+    <a href="https://study.physics.itmo.ru/" class="atom-link" target="_blank">
+        <!-- Замените src на путь к вашей фотке атома -->
+        <img src="atom.png" alt="Атом" title="Перейти на сайт study.physics.itmo.ru">
+    </a>
+</footer>
+
+<script>
+    // Пример кода для управления параметрами
+    document.getElementById('param1').addEventListener('input', function() {
+        document.getElementById('param1-value').textContent = this.value;
+    });
+
+    document.getElementById('param2').addEventListener('input', function() {
+        document.getElementById('param2-value').textContent = this.value;
+    });
+
+    // Здесь будет код для симуляции эксперимента
+    const canvas = document.getElementById('simulation-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Пример простой анимации
+    function drawSimulation() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Простая демонстрация - круг, который движется
+        const time = new Date().getTime() / 1000;
+        const x = canvas.width / 2 + Math.cos(time) * 100;
+        const y = canvas.height / 2 + Math.sin(time) * 100;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 20, 0, Math.PI * 2);
+        ctx.fillStyle = '#0066cc';
+        ctx.fill();
+
+        requestAnimationFrame(drawSimulation);
+    }
+
+    // Запуск анимации
+    drawSimulation();
+</script>
+</body>
+</html>

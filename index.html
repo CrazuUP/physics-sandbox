@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симуляция физических экспериментов</title>
+    <link rel="stylesheet" href="css/styles.css">
+
+</head>
+<body>
+<header>
+    <h1>Симуляция физических экспериментов</h1>
+    <div class="creators">Создатели: Ипантьев Иван, Гончаров Максим, Ахроров Кароматуллохон</div>
+</header>
+
+<div class="container">
+    <h2>Выберите эксперимент:</h2>
+    <div class="experiments-grid">
+        <button class="experiment-btn">Движение с постоянной силой и трением</button>
+        <button class="experiment-btn">2D-столкновения тел на плоскости</button>
+        <button class="experiment-btn">Моделирование движения спутника вокруг планеты</button>
+        <button class="experiment-btn">Равномерное прямолинейное движение</button>
+        <button class="experiment-btn">Машина Атвуда с переменным трением и наклоном</button>
+        <button class="experiment-btn">Демпфированные колебания маятника</button>
+        <button class="experiment-btn">Моделирование рычага</button>
+        <button class="experiment-btn">Столкновение тележки с пружиной</button>
+        <button class="experiment-btn">Вращение диска на закрепленной оси</button>
+    </div>
+</div>
+
+<footer>
+    <p>© 2025 Симуляция физических экспериментов</p>
+    <a href="https://study.physics.itmo.ru/" class="atom-link" target="_blank">
+        <img src="img/atom.jpg" title="Перейти на сайт study.physics.itmo.ru" alt="Атом">
+    </a>
+</footer>
+
+<script>
+    document.querySelectorAll('.experiment-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const experimentName = this.textContent;
+            const fileName = experimentName.toLowerCase().replace(/[^a-zа-яё0-9]+/g, '-') + '.html';
+            alert('Переход на страницу эксперимента: ' + experimentName + '\nФайл: ' + fileName);
+        });
+    });
+</script>
+</body>
+</html>
