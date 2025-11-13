@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Столкновение тележки с пружиной | Симуляция физических экспериментов</title>
+    <link rel="stylesheet" href="css/experiment-styles.css">
+</head>
+<body>
+<header>
+    <h1>Столкновение тележки с пружиной</h1>
+    <div class="creators">Создатели: Ипантьев Иван, Гончаров Максим, Ахроров Кароматуллохон</div>
+</header>
+
+<div class="container">
+    <nav class="breadcrumb" aria-label="Хлебные крошки">
+        <a href="index.html">Главная</a>
+        <span>Столкновение тележки с пружиной</span>
+    </nav>
+
+    <section class="intro">
+        <h2>Краткое описание</h2>
+        <p>Эксперимент моделирует лабораторную установку: тележка на гладком треке наезжает на пружину, которая может отражать тележку или удерживать её. Можно задавать массу тележки, начальную скорость, жёсткость пружины и коэффициент потерь.</p>
+        <p>Планируются два режима: «отскок» с восстановлением энергии и «залипание», когда тележка остаётся прижатой. Отдельный индикатор покажет баланс кинетической и потенциальной энергий и максимальное сжатие пружины.</p>
+    </section>
+
+    <div class="content-grid">
+        <section class="info-card">
+            <h3>Цели эксперимента</h3>
+            <ul>
+                <li>Изучить превращение кинетической энергии в потенциальную энергию пружины.</li>
+                <li>Определить максимальное сжатие пружины при разных условиях.</li>
+                <li>Оценить влияние потерь на амплитуду колебаний тележки.</li>
+            </ul>
+        </section>
+
+        <section class="info-card">
+            <h3>Основные формулы</h3>
+            <ul>
+                <li><strong>E<sub>k</sub> = m·v² / 2</strong> — кинетическая энергия тележки.</li>
+                <li><strong>E<sub>пруж</sub> = k·x² / 2</strong> — потенциальная энергия пружины.</li>
+                <li>Максимальное сжатие: <strong>x = √(m·v² / k)</strong> (без потерь).</li>
+            </ul>
+        </section>
+    </div>
+
+    <section class="simulation-area">
+        <h3>Область симуляции</h3>
+        <p>После реализации JavaScript здесь появится анимация движения тележки, деформации пружины и графики энергии. Будет отображаться сетка времени, отметка максимального сжатия и режим работы демпфирования.</p>
+        <canvas id="cart-spring-canvas" class="simulation-canvas" width="900" height="400" aria-label="Симуляция столкновения тележки с пружиной"></canvas>
+        <div class="visual-hint">Индикаторы на сцене покажут распределение энергий, а также подпишут момент остановки тележки.</div>
+    </section>
+
+    <section class="controls">
+        <h3>Параметры модели</h3>
+        <form class="controls-form" aria-label="Настройки столкновения тележки с пружиной">
+            <fieldset>
+                <legend>Тележка</legend>
+                <div class="option-grid two-columns">
+                    <div class="parameter-control">
+                        <label for="cart-mass">Масса тележки (кг)</label>
+                        <input type="range" id="cart-mass" name="cart_mass" min="0.5" max="5" step="0.1" value="1.5">
+                        <output id="cart-mass-value" for="cart-mass">1.5</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="cart-speed">Начальная скорость (м/с)</label>
+                        <input type="range" id="cart-speed" name="cart_speed" min="0" max="10" step="0.5" value="4">
+                        <output id="cart-speed-value" for="cart-speed">4.0</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="cart-friction">Сопротивление движения</label>
+                        <input type="range" id="cart-friction" name="cart_friction" min="0" max="0.4" step="0.01" value="0.02">
+                        <output id="cart-friction-value" for="cart-friction">0.02</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="cart-position">Начальное расстояние до пружины (м)</label>
+                        <input type="range" id="cart-position" name="cart_position" min="0" max="3" step="0.1" value="1.2">
+                        <output id="cart-position-value" for="cart-position">1.2</output>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Пружина и контакт</legend>
+                <div class="option-grid two-columns">
+                    <div class="parameter-control">
+                        <label for="spring-stiffness">Жёсткость пружины (Н/м)</label>
+                        <input type="range" id="spring-stiffness" name="spring_stiffness" min="50" max="500" step="10" value="200">
+                        <output id="spring-stiffness-value" for="spring-stiffness">200</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="spring-preload">Предварительное сжатие (см)</label>
+                        <input type="range" id="spring-preload" name="spring_preload" min="0" max="10" step="0.5" value="0">
+                        <output id="spring-preload-value" for="spring-preload">0</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="cart-damping">Коэффициент потерь</label>
+                        <input type="range" id="cart-damping" name="damping" min="0" max="0.5" step="0.01" value="0.05">
+                        <output id="cart-damping-value" for="cart-damping">0.05</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="contact-restitution">Коэффициент восстановления</label>
+                        <input type="range" id="contact-restitution" name="restitution" min="0" max="1" step="0.05" value="0.8">
+                        <output id="contact-restitution-value" for="contact-restitution">0.80</output>
+                    </div>
+                </div>
+                <div class="checkbox-grid" role="group" aria-label="Режимы контакта">
+                    <label>
+                        <input type="checkbox" id="contact-lock" name="contact_lock">
+                        Режим «залипания» (тележка остаётся прижатой)
+                    </label>
+                    <label>
+                        <input type="checkbox" id="contact-show-force" name="show_force" checked>
+                        График силы пружины
+                    </label>
+                    <label>
+                        <input type="checkbox" id="contact-show-energy" name="show_energy" checked>
+                        Графики энергий (E<sub>k</sub>, E<sub>пруж</sub>)
+                    </label>
+                </div>
+            </fieldset>
+        </form>
+        <div class="control-actions">
+            <button type="button" class="action-btn" id="cart-start">Запуск симуляции</button>
+            <button type="button" class="action-btn" id="cart-reset">Сброс параметров</button>
+        </div>
+        <p class="controls-hint">Интерактивность появится после добавления JavaScript.</p>
+    </section>
+
+    <section class="info-card">
+        <h3>Ход исследования</h3>
+        <ol>
+            <li>Настройте массу и скорость тележки, определите ожидаемое сжатие пружины без потерь.</li>
+            <li>Добавьте потери и сравните максимальное сжатие и амплитуду колебаний.</li>
+            <li>Оцените влияние жёсткости пружины на длительность взаимодействия.</li>
+            <li>Сделайте вывод о сохранении энергии в идеальных и реальных условиях.</li>
+        </ol>
+    </section>
+
+    <section class="info-card">
+        <h3>Методические комментарии</h3>
+        <ul>
+            <li>Предложите студентам построить энергетические диаграммы.</li>
+            <li>Обратите внимание на закон сохранения импульса при отскоке.</li>
+            <li>В качестве расширения рассмотрите взаимодействие двух тележек с пружиной между ними.</li>
+        </ul>
+    </section>
+
+    <section class="info-card">
+        <h3>План визуализации</h3>
+        <div class="chip-list">
+            <div class="chip">Диаграмма энергии с цветовой индикацией</div>
+            <div class="chip">Подсветка момента максимального сжатия</div>
+            <div class="chip">Интерактивный индикатор режима (отскок / залипание)</div>
+        </div>
+        <p class="note">HTML-структура уже содержит все элементы, которые затем подключит JavaScript — можно сразу перейти к логике расчёта и анимации.</p>
+    </section>
+
+    <button class="back-btn" onclick="window.location.href='index.html'">← Вернуться к списку экспериментов</button>
+</div>
+
+<footer>
+    <p>© 2025 Симуляция физических экспериментов</p>
+    <a href="https://study.physics.itmo.ru/" class="atom-link" target="_blank" rel="noopener">
+        <img src="img/atom.jpg" alt="Атом" title="Перейти на сайт study.physics.itmo.ru">
+    </a>
+</footer>
+</body>
+</html>
+

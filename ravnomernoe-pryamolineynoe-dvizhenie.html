@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Равномерное прямолинейное движение | Симуляция физических экспериментов</title>
+    <link rel="stylesheet" href="css/experiment-styles.css">
+</head>
+<body>
+<header>
+    <h1>Равномерное прямолинейное движение</h1>
+    <div class="creators">Создатели: Ипантьев Иван, Гончаров Максим, Ахроров Кароматуллохон</div>
+</header>
+
+<div class="container">
+    <nav class="breadcrumb" aria-label="Хлебные крошки">
+        <a href="index.html">Главная</a>
+        <span>Равномерное прямолинейное движение</span>
+    </nav>
+
+    <section class="intro">
+        <h2>Краткое описание</h2>
+        <p>Эксперимент демонстрирует движение материальной точки по прямой при различных кинематических режимах: равномерном, равнозамедленном и равнопеременном. Пользователь управляет начальной координатой, скоростью и (опционально) постоянным ускорением.</p>
+        <p>Это базовая сцена, которую можно расширить — например, добавить смену участков с разным ускорением, движение навстречу друг другу или анализ графиков. Вёрстка уже предусматривает переключатели режимов, чтобы позже легко заменить эксперимент на более сложный, если будет принято решение.</p>
+    </section>
+
+    <div class="content-grid">
+        <section class="info-card">
+            <h3>Цели эксперимента</h3>
+            <ul>
+                <li>Показать связь между скоростью и пройденным путём.</li>
+                <li>Научиться строить график координаты и пути от времени.</li>
+                <li>Определить, как начальное положение влияет на графики движения.</li>
+            </ul>
+        </section>
+
+        <section class="info-card">
+            <h3>Основные уравнения</h3>
+            <ul>
+                <li><strong>x(t) = x₀ + v·t</strong> — закон изменения координаты.</li>
+                <li><strong>s(t) = v·t</strong> — пройденный путь при v = const.</li>
+                <li>График координаты от времени — прямая линия.</li>
+            </ul>
+        </section>
+    </div>
+
+    <section class="simulation-area">
+        <h3>Область симуляции</h3>
+        <p>После подключения JavaScript в этой области появится модель движения точки по оси Ox, графики координаты и скорости, а также линейка для измерения перемещения. При включении ускорения траектория на графике координаты будет квадратичной.</p>
+        <canvas id="uniform-motion-canvas" class="simulation-canvas" width="900" height="350" aria-label="Симуляция равномерного движения"></canvas>
+        <div class="visual-hint">Будет добавлен таймлайн, отображающий смену режима (равномерное &rarr; равноускоренное), и индикатор направления движения.</div>
+    </section>
+
+    <section class="controls">
+        <h3>Параметры модели</h3>
+        <form class="controls-form" aria-label="Настройка параметров движения">
+            <fieldset>
+                <legend>Начальные условия</legend>
+                <div class="option-grid two-columns">
+                    <div class="parameter-control">
+                        <label for="uniform-start-position">Начальная координата (м)</label>
+                        <input type="range" id="uniform-start-position" name="start_position" min="-20" max="20" step="1" value="0">
+                        <output id="uniform-start-position-value" for="uniform-start-position">0</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="uniform-speed">Начальная скорость (м/с)</label>
+                        <input type="range" id="uniform-speed" name="speed" min="-10" max="10" step="0.5" value="3">
+                        <output id="uniform-speed-value" for="uniform-speed">3.0</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="uniform-duration">Время наблюдения (с)</label>
+                        <input type="range" id="uniform-duration" name="duration" min="5" max="60" step="5" value="20">
+                        <output id="uniform-duration-value" for="uniform-duration">20</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="uniform-time-step">Шаг моделирования (с)</label>
+                        <input type="range" id="uniform-time-step" name="time_step" min="0.05" max="1" step="0.05" value="0.2">
+                        <output id="uniform-time-step-value" for="uniform-time-step">0.20</output>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Режим движения</legend>
+                <div class="radio-grid" role="radiogroup" aria-label="Выбор кинематического режима">
+                    <label>
+                        <input type="radio" name="uniform-motion-mode" value="uniform" checked>
+                        Равномерное v = const
+                    </label>
+                    <label>
+                        <input type="radio" name="uniform-motion-mode" value="accelerated">
+                        Равноускоренное
+                    </label>
+                    <label>
+                        <input type="radio" name="uniform-motion-mode" value="braking">
+                        Равнозамедленное (a &lt; 0)
+                    </label>
+                </div>
+                <div class="parameter-control">
+                    <label for="uniform-acceleration">Ускорение (м/с²)</label>
+                    <input type="range" id="uniform-acceleration" name="acceleration" min="-5" max="5" step="0.1" value="0">
+                    <output id="uniform-acceleration-value" for="uniform-acceleration">0.0</output>
+                </div>
+                <div class="checkbox-grid" role="group" aria-label="Дополнительные опции">
+                    <label>
+                        <input type="checkbox" id="uniform-show-vt" name="show_speed_graph" checked>
+                        График скорости v(t)
+                    </label>
+                    <label>
+                        <input type="checkbox" id="uniform-show-st" name="show_distance_graph" checked>
+                        График пути s(t)
+                    </label>
+                    <label>
+                        <input type="checkbox" id="uniform-add-checkpoints" name="show_checkpoints">
+                        Маркеры ключевых моментов (t = 5, 10, …)
+                    </label>
+                </div>
+                <p class="note">Если требуется оставить только равномерный режим, ускорение устанавливается в ноль; остальная логика уже готова к расширению.</p>
+            </fieldset>
+        </form>
+        <div class="control-actions">
+            <button type="button" class="action-btn" id="uniform-start">Запуск симуляции</button>
+            <button type="button" class="action-btn" id="uniform-reset">Сброс параметров</button>
+        </div>
+        <p class="controls-hint">Логика запуска симуляции будет добавлена позднее.</p>
+    </section>
+
+    <section class="info-card">
+        <h3>Ход исследования</h3>
+        <ol>
+            <li>Задайте положительную скорость и наблюдайте линейный рост координаты.</li>
+            <li>Измените знак скорости, чтобы показать движение в обратную сторону.</li>
+            <li>Сравните графики координаты и пути при одинаковой скорости, но разных начальных положениях.</li>
+            <li>Сформулируйте вывод о наклоне графика координата-время.</li>
+        </ol>
+    </section>
+
+    <section class="info-card">
+        <h3>Методические комментарии</h3>
+        <ul>
+            <li>Рекомендуется подключить построение графиков в отдельной вкладке управления.</li>
+            <li>Для проверки понимания попросите обучающихся определить путь за заданный интервал времени.</li>
+            <li>В качестве расширения можно добавить расчет перемещения в векторном виде.</li>
+        </ul>
+    </section>
+
+    <section class="info-card">
+        <h3>Возможные расширения</h3>
+        <div class="chip-list">
+            <div class="chip">Смена режимов «ускорение ↔ торможение» по расписанию</div>
+            <div class="chip">Визуализация двух тел и поиск точки встречи</div>
+            <div class="chip">Сравнение теоретических и численных графиков</div>
+        </div>
+        <p class="note">При желании этот эксперимент легко заменить на более сложный — базовая структура разметки совпадает с остальными страницами и не потребует переработки стилей.</p>
+    </section>
+
+    <button class="back-btn" onclick="window.location.href='index.html'">← Вернуться к списку экспериментов</button>
+</div>
+
+<footer>
+    <p>© 2025 Симуляция физических экспериментов</p>
+    <a href="https://study.physics.itmo.ru/" class="atom-link" target="_blank" rel="noopener">
+        <img src="img/atom.jpg" alt="Атом" title="Перейти на сайт study.physics.itmo.ru">
+    </a>
+</footer>
+</body>
+</html>
+

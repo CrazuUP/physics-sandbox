@@ -16,15 +16,15 @@
 <div class="container">
     <h2>Выберите эксперимент:</h2>
     <div class="experiments-grid">
-        <button class="experiment-btn">Движение с постоянной силой и трением</button>
-        <button class="experiment-btn">2D-столкновения тел на плоскости</button>
-        <button class="experiment-btn">Моделирование движения спутника вокруг планеты</button>
-        <button class="experiment-btn">Равномерное прямолинейное движение</button>
-        <button class="experiment-btn">Машина Атвуда с переменным трением и наклоном</button>
-        <button class="experiment-btn">Демпфированные колебания маятника</button>
-        <button class="experiment-btn">Моделирование рычага</button>
-        <button class="experiment-btn">Столкновение тележки с пружиной</button>
-        <button class="experiment-btn">Вращение диска на закрепленной оси</button>
+        <a class="experiment-btn" href="dvizhenie-s-postoyannoy-siloy-i-treniem.html">Движение с постоянной силой и трением</a>
+        <a class="experiment-btn" href="2d-stolknoveniya-tel-na-ploskosti.html">2D-столкновения тел на плоскости</a>
+        <a class="experiment-btn" href="modelirovanie-dvizheniya-sputnika-vokrug-planety.html">Моделирование движения спутника вокруг планеты</a>
+        <a class="experiment-btn" href="ravnomernoe-pryamolineynoe-dvizhenie.html">Равномерное прямолинейное движение</a>
+        <a class="experiment-btn" href="mashina-atvuda-s-peremennym-treniem-i-naklonom.html">Машина Атвуда с переменным трением и наклоном</a>
+        <a class="experiment-btn" href="dempfirovannye-kolebaniya-mayatnika.html">Демпфированные колебания маятника</a>
+        <a class="experiment-btn" href="modelirovanie-rychaga.html">Моделирование рычага</a>
+        <a class="experiment-btn" href="stolknovenie-telezhki-s-pruzhinoy.html">Столкновение тележки с пружиной</a>
+        <a class="experiment-btn" href="vrashenie-diska-na-zakreplennoy-osi.html">Вращение диска на закрепленной оси</a>
     </div>
 </div>
 
@@ -35,14 +35,5 @@
     </a>
 </footer>
 
-<script>
-    document.querySelectorAll('.experiment-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const experimentName = this.textContent;
-            const fileName = experimentName.toLowerCase().replace(/[^a-zа-яё0-9]+/g, '-') + '.html';
-            alert('Переход на страницу эксперимента: ' + experimentName + '\nФайл: ' + fileName);
-        });
-    });
-</script>
 </body>
 </html>

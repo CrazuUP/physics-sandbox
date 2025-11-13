@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моделирование движения спутника вокруг планеты | Симуляция физических экспериментов</title>
+    <link rel="stylesheet" href="css/experiment-styles.css">
+</head>
+<body>
+<header>
+    <h1>Моделирование движения спутника вокруг планеты</h1>
+    <div class="creators">Создатели: Ипантьев Иван, Гончаров Максим, Ахроров Кароматуллохон</div>
+</header>
+
+<div class="container">
+    <nav class="breadcrumb" aria-label="Хлебные крошки">
+        <a href="index.html">Главная</a>
+        <span>Моделирование движения спутника вокруг планеты</span>
+    </nav>
+
+    <section class="intro">
+        <h2>Краткое описание</h2>
+        <p>Симуляция демонстрирует орбитальное движение искусственного спутника вокруг планеты с учётом гравитационного притяжения. Можно исследовать устойчивые круговые и эллиптические орбиты, условия перехода к параболической траектории и влияние наклона орбиты.</p>
+        <p>Дополнительно планируется панель наблюдения за основными параметрами орбиты: апогей, перигей, период обращения и изменение энергии. Пользователь сможет включать трассировку и сетку орбитальных маневров.</p>
+    </section>
+
+    <div class="content-grid">
+        <section class="info-card">
+            <h3>Цели эксперимента</h3>
+            <ul>
+                <li>Исследовать зависимость типа орбиты от начальной скорости спутника.</li>
+                <li>Сравнить параметры круговых и эллиптических орбит.</li>
+                <li>Понять влияние массы планеты на гравитационное притяжение и период обращения.</li>
+            </ul>
+        </section>
+
+        <section class="info-card">
+            <h3>Ключевые формулы</h3>
+            <ul>
+                <li><strong>F = G·M·m / r²</strong> — сила гравитационного притяжения.</li>
+                <li><strong>v<sub>круг</sub> = √(G·M / r)</strong> — орбитальная скорость для круговой орбиты.</li>
+                <li><strong>T = 2π·√(r³ / (G·M))</strong> — период обращения.</li>
+            </ul>
+        </section>
+    </div>
+
+    <section class="simulation-area">
+        <h3>Область симуляции</h3>
+        <p>JavaScript отобразит траекторию спутника, поле притяжения и след орбиты с цветовой индикацией скорости. При переходе на параболу камера будет автоматически масштабироваться, чтобы удерживать спутник в кадре.</p>
+        <canvas id="orbit-canvas" class="simulation-canvas" width="900" height="450" aria-label="Симуляция движения спутника вокруг планеты"></canvas>
+        <div class="visual-hint">Отдельно появится мини-график радиус-время и подписи ключевых точек (апогей, перигей, узлы).</div>
+    </section>
+
+    <section class="controls">
+        <h3>Параметры модели</h3>
+        <form class="controls-form" aria-label="Настройки орбиты">
+            <fieldset>
+                <legend>Параметры планеты</legend>
+                <div class="option-grid two-columns">
+                    <div class="parameter-control">
+                        <label for="orbit-planet-mass">Масса планеты (в массах Земли)</label>
+                        <input type="range" id="orbit-planet-mass" name="planet_mass" min="0.5" max="5" step="0.1" value="1">
+                        <output id="orbit-planet-mass-value" for="orbit-planet-mass">1.0</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="orbit-radius">Начальная высота над поверхностью (тыс. км)</label>
+                        <input type="range" id="orbit-radius" name="radius" min="6" max="50" step="1" value="12">
+                        <output id="orbit-radius-value" for="orbit-radius">12</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="orbit-inclination">Наклон орбиты (°)</label>
+                        <input type="range" id="orbit-inclination" name="inclination" min="0" max="180" step="5" value="0">
+                        <output id="orbit-inclination-value" for="orbit-inclination">0</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="orbit-drag">Аэродинамическое сопротивление</label>
+                        <input type="range" id="orbit-drag" name="drag" min="0" max="0.05" step="0.005" value="0">
+                        <output id="orbit-drag-value" for="orbit-drag">0.000</output>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Параметры спутника</legend>
+                <div class="option-grid two-columns">
+                    <div class="parameter-control">
+                        <label for="orbit-satellite-mass">Масса спутника (в массах Луны)</label>
+                        <input type="range" id="orbit-satellite-mass" name="satellite_mass" min="0.01" max="1" step="0.01" value="0.05">
+                        <output id="orbit-satellite-mass-value" for="orbit-satellite-mass">0.05</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="orbit-initial-speed">Начальная скорость (км/с)</label>
+                        <input type="range" id="orbit-initial-speed" name="initial_speed" min="4" max="15" step="0.1" value="7.9">
+                        <output id="orbit-initial-speed-value" for="orbit-initial-speed">7.9</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="orbit-flight-angle">Угол запуска относительно горизонтали (°)</label>
+                        <input type="range" id="orbit-flight-angle" name="flight_angle" min="-30" max="30" step="1" value="0">
+                        <output id="orbit-flight-angle-value" for="orbit-flight-angle">0</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="orbit-thrust">Импульс коррекции (м/с)</label>
+                        <input type="range" id="orbit-thrust" name="thrust" min="0" max="2" step="0.05" value="0">
+                        <output id="orbit-thrust-value" for="orbit-thrust">0.00</output>
+                    </div>
+                </div>
+                <div class="checkbox-grid" role="group" aria-label="Визуализация и расчёты">
+                    <label>
+                        <input type="checkbox" id="orbit-show-trace" name="show_trace" checked>
+                        Показывать след орбиты
+                    </label>
+                    <label>
+                        <input type="checkbox" id="orbit-show-apsis" name="show_apsis" checked>
+                        Выводить апогей и перигей
+                    </label>
+                    <label>
+                        <input type="checkbox" id="orbit-show-energy" name="show_energy">
+                        График энергии и момента импульса
+                    </label>
+                </div>
+            </fieldset>
+        </form>
+        <div class="control-actions">
+            <button type="button" class="action-btn" id="orbit-start">Запуск симуляции</button>
+            <button type="button" class="action-btn" id="orbit-reset">Сброс параметров</button>
+        </div>
+        <p class="controls-hint">Функционал управления появится после реализации JavaScript.</p>
+    </section>
+
+    <section class="info-card">
+        <h3>Ход исследования</h3>
+        <ol>
+            <li>Подберите скорость, обеспечивающую круговую орбиту для выбранной высоты.</li>
+            <li>Измените скорость и сравните эллиптическую и параболическую траектории.</li>
+            <li>Определите, как меняется период обращения при увеличении радиуса орбиты.</li>
+            <li>Сформулируйте вывод о связи между массой планеты и необходимой орбитальной скоростью.</li>
+        </ol>
+    </section>
+
+    <section class="info-card">
+        <h3>Методические комментарии</h3>
+        <ul>
+            <li>Напомните студентам о гравитационной постоянной и единицах измерения.</li>
+            <li>Попросите вычислить первую космическую скорость для выбранных параметров.</li>
+            <li>В качестве расширения: сравните движение спутника вокруг планеты и вокруг звезды.</li>
+        </ul>
+    </section>
+
+    <section class="info-card">
+        <h3>Дополнительные визуальные элементы</h3>
+        <div class="chip-list">
+            <div class="chip">Динамическая диаграмма скорости по орбите</div>
+            <div class="chip">Анимация манёвра Δv</div>
+            <div class="chip">Таблица основных орбитальных параметров</div>
+        </div>
+        <p class="note">Компоненты подготовлены вёрсткой; логика расчётов и обновления данных будет добавлена позже.</p>
+    </section>
+
+    <button class="back-btn" onclick="window.location.href='index.html'">← Вернуться к списку экспериментов</button>
+</div>
+
+<footer>
+    <p>© 2025 Симуляция физических экспериментов</p>
+    <a href="https://study.physics.itmo.ru/" class="atom-link" target="_blank" rel="noopener">
+        <img src="img/atom.jpg" alt="Атом" title="Перейти на сайт study.physics.itmo.ru">
+    </a>
+</footer>
+</body>
+</html>
+

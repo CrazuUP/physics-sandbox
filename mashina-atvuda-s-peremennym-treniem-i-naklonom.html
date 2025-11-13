@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Машина Атвуда с переменным трением и наклоном | Симуляция физических экспериментов</title>
+    <link rel="stylesheet" href="css/experiment-styles.css">
+</head>
+<body>
+<header>
+    <h1>Машина Атвуда с переменным трением и наклоном</h1>
+    <div class="creators">Создатели: Ипантьев Иван, Гончаров Максим, Ахроров Кароматуллохон</div>
+</header>
+
+<div class="container">
+    <nav class="breadcrumb" aria-label="Хлебные крошки">
+        <a href="index.html">Главная</a>
+        <span>Машина Атвуда с переменным трением и наклоном</span>
+    </nav>
+
+    <section class="intro">
+        <h2>Краткое описание</h2>
+        <p>Сцена моделирует расширенную машину Атвуда: два груза соединены нерастяжимой нитью, перекинутой через блок, причём каждое тело располагается на своей наклонной плоскости. Учитываются трение на поверхностях и собственный момент инерции блока.</p>
+        <p>Эксперимент помогает исследовать равновесие и движение системы при разных углах наклона, коэффициентах трения и массе блоков. Также можно проверить, в какую сторону начнёт двигаться система и при каком наборе параметров она останется в покое.</p>
+    </section>
+
+    <div class="content-grid">
+        <section class="info-card">
+            <h3>Цели эксперимента</h3>
+            <ul>
+                <li>Определить условия равновесия и движения системы.</li>
+                <li>Изучить влияние коэффициента трения в блоке.</li>
+                <li>Сравнить ускорение при разных углах наклона и массе грузов.</li>
+            </ul>
+        </section>
+
+        <section class="info-card">
+            <h3>Основные формулы</h3>
+            <ul>
+                <li><strong>a = (m₁ - m₂)·g / (m₁ + m₂)</strong> — ускорение идеальной машины Атвуда.</li>
+                <li>Учитывая трение: <strong>a = (m₁g - m₂g - F<sub>тр</sub>) / (m₁ + m₂)</strong>.</li>
+                <li>Проекция силы тяжести на наклон: <strong>m·g·sin(α)</strong>.</li>
+            </ul>
+        </section>
+    </div>
+
+    <section class="simulation-area">
+        <h3>Область симуляции</h3>
+        <p>После добавления JavaScript здесь появится анимация двух тел на наклонных плоскостях, блок с отображением трения на оси и диаграммы приложенных сил. Будут показаны фазы: покой, преодоление трения покоя, установившееся ускорение.</p>
+        <canvas id="atwood-canvas" class="simulation-canvas" width="900" height="450" aria-label="Симуляция машины Атвуда"></canvas>
+        <div class="visual-hint">Планируется визуализировать моменты сил на блоке и подписывать направление ускорения в режиме реального времени.</div>
+    </section>
+
+    <section class="controls">
+        <h3>Параметры модели</h3>
+        <form class="controls-form" aria-label="Настройка параметров машины Атвуда">
+            <fieldset>
+                <legend>Свойства грузов</legend>
+                <div class="option-grid two-columns">
+                    <div class="parameter-control">
+                        <label for="atwood-mass-1">Масса груза A (кг)</label>
+                        <input type="range" id="atwood-mass-1" name="mass_a" min="1" max="10" step="0.5" value="4">
+                        <output id="atwood-mass-1-value" for="atwood-mass-1">4.0</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="atwood-mass-2">Масса груза B (кг)</label>
+                        <input type="range" id="atwood-mass-2" name="mass_b" min="1" max="10" step="0.5" value="3">
+                        <output id="atwood-mass-2-value" for="atwood-mass-2">3.0</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="atwood-length-a">Длина плеча A (м)</label>
+                        <input type="range" id="atwood-length-a" name="length_a" min="1" max="8" step="0.2" value="3">
+                        <output id="atwood-length-a-value" for="atwood-length-a">3.0</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="atwood-length-b">Длина плеча B (м)</label>
+                        <input type="range" id="atwood-length-b" name="length_b" min="1" max="8" step="0.2" value="3">
+                        <output id="atwood-length-b-value" for="atwood-length-b">3.0</output>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Наклонные плоскости</legend>
+                <div class="option-grid two-columns">
+                    <div class="parameter-control">
+                        <label for="atwood-angle-a">Угол плоскости A (°)</label>
+                        <input type="range" id="atwood-angle-a" name="angle_a" min="0" max="60" step="1" value="20">
+                        <output id="atwood-angle-a-value" for="atwood-angle-a">20</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="atwood-angle-b">Угол плоскости B (°)</label>
+                        <input type="range" id="atwood-angle-b" name="angle_b" min="0" max="60" step="1" value="10">
+                        <output id="atwood-angle-b-value" for="atwood-angle-b">10</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="atwood-friction-a">Коэффициент трения A</label>
+                        <input type="range" id="atwood-friction-a" name="friction_a" min="0" max="0.6" step="0.02" value="0.15">
+                        <output id="atwood-friction-a-value" for="atwood-friction-a">0.15</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="atwood-friction-b">Коэффициент трения B</label>
+                        <input type="range" id="atwood-friction-b" name="friction_b" min="0" max="0.6" step="0.02" value="0.12">
+                        <output id="atwood-friction-b-value" for="atwood-friction-b">0.12</output>
+                    </div>
+                </div>
+                <div class="checkbox-grid" role="group" aria-label="Параметры поверхности">
+                    <label>
+                        <input type="checkbox" id="atwood-lock-static" name="lock_static">
+                        Использовать разные коэффициенты трения покоя/скольжения
+                    </label>
+                    <label>
+                        <input type="checkbox" id="atwood-show-components" name="show_components" checked>
+                        Показывать разложение сил на плоскостях
+                    </label>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Блок и нить</legend>
+                <div class="option-grid two-columns">
+                    <div class="parameter-control">
+                        <label for="atwood-pulley-mass">Масса блока (кг)</label>
+                        <input type="range" id="atwood-pulley-mass" name="pulley_mass" min="0" max="5" step="0.2" value="1.5">
+                        <output id="atwood-pulley-mass-value" for="atwood-pulley-mass">1.5</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="atwood-pulley-radius">Радиус блока (см)</label>
+                        <input type="range" id="atwood-pulley-radius" name="pulley_radius" min="2" max="15" step="1" value="6">
+                        <output id="atwood-pulley-radius-value" for="atwood-pulley-radius">6</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="atwood-axle-friction">Трение в оси блока</label>
+                        <input type="range" id="atwood-axle-friction" name="axle_friction" min="0" max="0.3" step="0.01" value="0.05">
+                        <output id="atwood-axle-friction-value" for="atwood-axle-friction">0.05</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="atwood-rope-elasticity">Растяжимость нити (%)</label>
+                        <input type="range" id="atwood-rope-elasticity" name="rope_elasticity" min="0" max="5" step="0.1" value="0">
+                        <output id="atwood-rope-elasticity-value" for="atwood-rope-elasticity">0.0</output>
+                    </div>
+                </div>
+                <p class="note">При растяжимости нити &gt; 0 появится пружинная модель, которую можно отключить, установив значение в 0%.</p>
+            </fieldset>
+        </form>
+        <div class="control-actions">
+            <button type="button" class="action-btn" id="atwood-start">Запуск симуляции</button>
+            <button type="button" class="action-btn" id="atwood-reset">Сброс параметров</button>
+        </div>
+        <p class="controls-hint">Управление будет подключено в JavaScript-части проекта.</p>
+    </section>
+
+    <section class="info-card">
+        <h3>Ход исследования</h3>
+        <ol>
+            <li>Задайте массы грузов и определите направление движения системы.</li>
+            <li>Измените угол наклона и наблюдайте, как меняется ускорение.</li>
+            <li>Добавьте трение и оцените, при каких значениях система переходит в состояние равновесия.</li>
+            <li>Сравните результаты с идеальной машиной Атвуда.</li>
+        </ol>
+    </section>
+
+    <section class="info-card">
+        <h3>Методические комментарии</h3>
+        <ul>
+            <li>Обратите внимание на роль нормальной реакции при наклоне.</li>
+            <li>Предложите студентам составить уравнения движения для каждого груза.</li>
+            <li>В качестве расширения — рассчитать работу силы трения за цикл движения.</li>
+        </ul>
+    </section>
+
+    <section class="info-card">
+        <h3>Элементы визуализации</h3>
+        <div class="chip-list">
+            <div class="chip">Линейка ускорений с указанием направления движения</div>
+            <div class="chip">График натяжения нити во времени</div>
+            <div class="chip">Интерактивный индикатор статического/динамического трения</div>
+        </div>
+        <p class="note">HTML уже содержит блоки для вывода этих данных — достаточно будет подключить вычисления в будущем.</p>
+    </section>
+
+    <button class="back-btn" onclick="window.location.href='index.html'">← Вернуться к списку экспериментов</button>
+</div>
+
+<footer>
+    <p>© 2025 Симуляция физических экспериментов</p>
+    <a href="https://study.physics.itmo.ru/" class="atom-link" target="_blank" rel="noopener">
+        <img src="img/atom.jpg" alt="Атом" title="Перейти на сайт study.physics.itmo.ru">
+    </a>
+</footer>
+</body>
+</html>
+

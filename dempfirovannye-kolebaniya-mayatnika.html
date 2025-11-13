@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Демпфированные колебания маятника | Симуляция физических экспериментов</title>
+    <link rel="stylesheet" href="css/experiment-styles.css">
+</head>
+<body>
+<header>
+    <h1>Демпфированные колебания маятника</h1>
+    <div class="creators">Создатели: Ипантьев Иван, Гончаров Максим, Ахроров Кароматуллохон</div>
+</header>
+
+<div class="container">
+    <nav class="breadcrumb" aria-label="Хлебные крошки">
+        <a href="index.html">Главная</a>
+        <span>Демпфированные колебания маятника</span>
+    </nav>
+
+    <section class="intro">
+        <h2>Краткое описание</h2>
+        <p>Эксперимент посвящён исследованию колебаний маятника при наличии сил сопротивления и внешних факторов. Можно изменять длину нити, массу груза, коэффициент демпфирования и добавлять внешнее гармоническое воздействие. Отдельный переключатель позволяет мгновенно задать критическое демпфирование.</p>
+        <p>Планируется визуализация фазовой траектории (θ, ω), графиков энергии и индикатора силы сопротивления. Это поможет наглядно показать затухание амплитуды и изменение периода при разных режимах.</p>
+    </section>
+
+    <div class="content-grid">
+        <section class="info-card">
+            <h3>Цели эксперимента</h3>
+            <ul>
+                <li>Проанализировать влияние демпфирования на амплитуду колебаний.</li>
+                <li>Изучить зависимость периода от длины маятника.</li>
+                <li>Определить критическое значение коэффициента демпфирования.</li>
+            </ul>
+        </section>
+
+        <section class="info-card">
+            <h3>Основные формулы</h3>
+            <ul>
+                <li><strong>T = 2π·√(L / g)</strong> — период математического маятника без демпфирования.</li>
+                <li>Уравнение движения: <strong>θ'' + 2βθ' + ω₀²θ = 0</strong>.</li>
+                <li>Экспоненциальный спад амплитуды: <strong>A(t) = A₀·e<sup>-βt</sup></strong>.</li>
+            </ul>
+        </section>
+    </div>
+
+    <section class="simulation-area">
+        <h3>Область симуляции</h3>
+        <p>В этой зоне появится анимация движения маятника, отображение траектории в фазовом пространстве и графики угла/скорости. Холст предназначен для визуализации колебаний и силы сопротивления, действующей на маятник.</p>
+        <canvas id="damped-pendulum-canvas" class="simulation-canvas" width="900" height="450" aria-label="Симуляция демпфированных колебаний маятника"></canvas>
+        <div class="visual-hint">Дополнительно будут отображены линии уровня энергии и точки пересечения с осью, чтобы показать изменение фазового портрета.</div>
+    </section>
+
+    <section class="controls">
+        <h3>Параметры модели</h3>
+        <form class="controls-form" aria-label="Настройки маятника">
+            <fieldset>
+                <legend>Основные параметры</legend>
+                <div class="option-grid two-columns">
+                    <div class="parameter-control">
+                        <label for="pendulum-length">Длина маятника (м)</label>
+                        <input type="range" id="pendulum-length" name="length" min="0.2" max="2" step="0.1" value="1">
+                        <output id="pendulum-length-value" for="pendulum-length">1.0</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="pendulum-mass">Масса груза (кг)</label>
+                        <input type="range" id="pendulum-mass" name="mass" min="0.1" max="5" step="0.1" value="1">
+                        <output id="pendulum-mass-value" for="pendulum-mass">1.0</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="pendulum-angle">Начальный угол (°)</label>
+                        <input type="range" id="pendulum-angle" name="angle" min="1" max="60" step="1" value="20">
+                        <output id="pendulum-angle-value" for="pendulum-angle">20</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="pendulum-angular-velocity">Начальная угловая скорость (рад/с)</label>
+                        <input type="range" id="pendulum-angular-velocity" name="angular_velocity" min="-5" max="5" step="0.1" value="0">
+                        <output id="pendulum-angular-velocity-value" for="pendulum-angular-velocity">0.0</output>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Демпфирование и внешняя сила</legend>
+                <div class="option-grid two-columns">
+                    <div class="parameter-control">
+                        <label for="pendulum-damping">Коэффициент демпфирования</label>
+                        <input type="range" id="pendulum-damping" name="damping" min="0" max="1" step="0.05" value="0.15">
+                        <output id="pendulum-damping-value" for="pendulum-damping">0.15</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="pendulum-critical-factor">Критический коэффициент (β<sub>кр</sub>)</label>
+                        <output id="pendulum-critical-factor" class="value-badge">—</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="pendulum-drive-amplitude">Амплитуда внешней силы (Н)</label>
+                        <input type="range" id="pendulum-drive-amplitude" name="drive_amplitude" min="0" max="5" step="0.1" value="0">
+                        <output id="pendulum-drive-amplitude-value" for="pendulum-drive-amplitude">0.0</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="pendulum-drive-frequency">Частота возбуждения (Гц)</label>
+                        <input type="range" id="pendulum-drive-frequency" name="drive_frequency" min="0" max="5" step="0.1" value="1.2">
+                        <output id="pendulum-drive-frequency-value" for="pendulum-drive-frequency">1.2</output>
+                    </div>
+                </div>
+                <div class="checkbox-grid" role="group" aria-label="Режимы демпфирования">
+                    <label>
+                        <input type="checkbox" id="pendulum-auto-critical" name="auto_critical">
+                        Авторасчёт критического демпфирования
+                    </label>
+                    <label>
+                        <input type="checkbox" id="pendulum-show-phase" name="show_phase" checked>
+                        Показывать фазовый портрет
+                    </label>
+                    <label>
+                        <input type="checkbox" id="pendulum-show-energy" name="show_energy" checked>
+                        График энергии во времени
+                    </label>
+                </div>
+            </fieldset>
+        </form>
+        <div class="control-actions">
+            <button type="button" class="action-btn" id="pendulum-start">Запуск симуляции</button>
+            <button type="button" class="action-btn" id="pendulum-reset">Сброс параметров</button>
+        </div>
+        <p class="controls-hint">Поведение элементов управления будет реализовано на JavaScript.</p>
+    </section>
+
+    <section class="info-card">
+        <h3>Ход исследования</h3>
+        <ol>
+            <li>Настройте коэффициент демпфирования и наблюдайте скорость затухания колебаний.</li>
+            <li>Измените длину маятника и определите изменение периода.</li>
+            <li>Проведите серию запусков, фиксируя максимальные отклонения через равные интервалы времени.</li>
+            <li>Сравните экспериментальные данные с теоретическими расчетами.</li>
+        </ol>
+    </section>
+
+    <section class="info-card">
+        <h3>Методические комментарии</h3>
+        <ul>
+            <li>Подчеркните связь между демпфированием и потерей энергии в системе.</li>
+            <li>Рекомендуется обсудить реальные источники сопротивления: воздух, внутреннее трение.</li>
+            <li>В качестве расширения предложите рассмотреть вынужденные колебания.</li>
+        </ul>
+    </section>
+
+    <section class="info-card">
+        <h3>Запланированные визуальные дополнения</h3>
+        <div class="chip-list">
+            <div class="chip">Тепловая карта энергии</div>
+            <div class="chip">Указатели фазовых переходов (критический режим)</div>
+            <div class="chip">Сравнение аналитического решения с численным</div>
+        </div>
+        <p class="note">Все элементы уже зарезервированы разметкой, чтобы друг мог подключить JavaScript без дополнительных правок HTML/CSS.</p>
+    </section>
+
+    <button class="back-btn" onclick="window.location.href='index.html'">← Вернуться к списку экспериментов</button>
+</div>
+
+<footer>
+    <p>© 2025 Симуляция физических экспериментов</p>
+    <a href="https://study.physics.itmo.ru/" class="atom-link" target="_blank" rel="noopener">
+        <img src="img/atom.jpg" alt="Атом" title="Перейти на сайт study.physics.itmo.ru">
+    </a>
+</footer>
+</body>
+</html>
+

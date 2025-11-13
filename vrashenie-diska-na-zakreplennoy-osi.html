@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вращение диска на закрепленной оси | Симуляция физических экспериментов</title>
+    <link rel="stylesheet" href="css/experiment-styles.css">
+</head>
+<body>
+<header>
+    <h1>Вращение диска на закрепленной оси</h1>
+    <div class="creators">Создатели: Ипантьев Иван, Гончаров Максим, Ахроров Кароматуллохон</div>
+</header>
+
+<div class="container">
+    <nav class="breadcrumb" aria-label="Хлебные крошки">
+        <a href="index.html">Главная</a>
+        <span>Вращение диска на закрепленной оси</span>
+    </nav>
+
+    <section class="intro">
+        <h2>Краткое описание</h2>
+        <p>Симуляция демонстрирует вращение однородного диска вокруг закреплённой оси под действием внешнего момента и сопротивления. Пользователь задаёт начальную угловую скорость, внешний момент разгона/торможения и коэффициент вязкого трения.</p>
+        <p>Интерфейс рассчитан на расчёт времени до остановки, среднего и мгновенного углового ускорения, а также на отображение баланса работы внешнего момента и потерь на сопротивление.</p>
+    </section>
+
+    <div class="content-grid">
+        <section class="info-card">
+            <h3>Цели эксперимента</h3>
+            <ul>
+                <li>Исследовать зависимость углового ускорения от момента и момента инерции.</li>
+                <li>Оценить влияние силы трения на установившуюся угловую скорость.</li>
+                <li>Сравнить кинетические энергии для разных радиусов диска.</li>
+            </ul>
+        </section>
+
+        <section class="info-card">
+            <h3>Основные формулы</h3>
+            <ul>
+                <li><strong>I = ½·m·R²</strong> — момент инерции однородного диска.</li>
+                <li><strong>τ = I·α</strong> — связь между моментом сил и угловым ускорением.</li>
+                <li><strong>E<sub>к</sub> = ½·I·ω²</strong> — кинетическая энергия вращения.</li>
+            </ul>
+        </section>
+    </div>
+
+    <section class="simulation-area">
+        <h3>Область симуляции</h3>
+        <p>После реализации JavaScript холст покажет вращающийся диск, графики угловой скорости и углового ускорения, а также визуализацию внешнего и сопротивляющего моментов. Будет добавлен индикатор накопленной работы.</p>
+        <canvas id="disk-rotation-canvas" class="simulation-canvas" width="900" height="420" aria-label="Симуляция вращения диска"></canvas>
+        <div class="visual-hint">Планируется круговая диаграмма, показывающая распределение энергии между вращением и потерями. Кроме того, появится подсказка «Время до полной остановки».</div>
+    </section>
+
+    <section class="controls">
+        <h3>Параметры модели</h3>
+        <form class="controls-form" aria-label="Настройка вращения диска">
+            <fieldset>
+                <legend>Геометрия и масса</legend>
+                <div class="option-grid two-columns">
+                    <div class="parameter-control">
+                        <label for="disk-radius">Радиус диска (м)</label>
+                        <input type="range" id="disk-radius" name="radius" min="0.1" max="1" step="0.05" value="0.4">
+                        <output id="disk-radius-value" for="disk-radius">0.40</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="disk-mass">Масса диска (кг)</label>
+                        <input type="range" id="disk-mass" name="mass" min="1" max="20" step="1" value="8">
+                        <output id="disk-mass-value" for="disk-mass">8</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="disk-axis-friction">Трение в оси</label>
+                        <input type="range" id="disk-axis-friction" name="axis_friction" min="0" max="0.3" step="0.01" value="0.05">
+                        <output id="disk-axis-friction-value" for="disk-axis-friction">0.05</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="disk-moment-inertia">Момент инерции (кг·м²)</label>
+                        <output id="disk-moment-inertia" class="value-badge">—</output>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Динамика вращения</legend>
+                <div class="option-grid two-columns">
+                    <div class="parameter-control">
+                        <label for="disk-initial-omega">Начальная угловая скорость (рад/с)</label>
+                        <input type="range" id="disk-initial-omega" name="initial_omega" min="0" max="80" step="1" value="35">
+                        <output id="disk-initial-omega-value" for="disk-initial-omega">35</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="disk-torque">Внешний момент (Н·м)</label>
+                        <input type="range" id="disk-torque" name="torque" min="-50" max="50" step="1" value="15">
+                        <output id="disk-torque-value" for="disk-torque">15</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="disk-friction">Вязкое сопротивление</label>
+                        <input type="range" id="disk-friction" name="friction" min="0" max="0.5" step="0.01" value="0.1">
+                        <output id="disk-friction-value" for="disk-friction">0.10</output>
+                    </div>
+                    <div class="parameter-control">
+                        <label for="disk-observation-time">Время наблюдения (с)</label>
+                        <input type="range" id="disk-observation-time" name="observation_time" min="2" max="60" step="2" value="20">
+                        <output id="disk-observation-time-value" for="disk-observation-time">20</output>
+                    </div>
+                </div>
+                <div class="checkbox-grid" role="group" aria-label="Дополнительные расчёты">
+                    <label>
+                        <input type="checkbox" id="disk-compute-stop-time" name="compute_stop" checked>
+                        Рассчитывать время до остановки
+                    </label>
+                    <label>
+                        <input type="checkbox" id="disk-show-energy" name="show_energy" checked>
+                        График кинетической энергии
+                    </label>
+                    <label>
+                        <input type="checkbox" id="disk-show-work" name="show_work">
+                        Показывать работу внешнего момента
+                    </label>
+                </div>
+            </fieldset>
+        </form>
+        <div class="control-actions">
+            <button type="button" class="action-btn" id="disk-start">Запуск симуляции</button>
+            <button type="button" class="action-btn" id="disk-reset">Сброс параметров</button>
+        </div>
+        <p class="controls-hint">Логика будет добавлена на JavaScript этапе.</p>
+    </section>
+
+    <section class="info-card">
+        <h3>Ход исследования</h3>
+        <ol>
+            <li>Исследуйте влияние радиуса и массы на момент инерции и угловое ускорение.</li>
+            <li>Установите постоянный момент и наблюдайте за ростом угловой скорости.</li>
+            <li>Добавьте сопротивление и оцените установившееся значение угловой скорости.</li>
+            <li>Сопоставьте полученные данные с аналитическими расчётами.</li>
+        </ol>
+    </section>
+
+    <section class="info-card">
+        <h3>Методические комментарии</h3>
+        <ul>
+            <li>Подчеркните аналогию между вращательным и поступательным движением.</li>
+            <li>Предложите студентам рассчитать работу момента сил.</li>
+            <li>В качестве расширения можно добавить внешний тормозящий момент.</li>
+        </ul>
+    </section>
+
+    <section class="info-card">
+        <h3>Дополнительные визуальные элементы</h3>
+        <div class="chip-list">
+            <div class="chip">Диаграмма угловой скорости vs время</div>
+            <div class="chip">Инфо-блок с временем до остановки и средней ω</div>
+            <div class="chip">Анимация торможения с подсветкой потерь энергии</div>
+        </div>
+        <p class="note">Все необходимые элементы уже заложены в HTML; остаётся реализовать вычисления и анимацию.</p>
+    </section>
+
+    <button class="back-btn" onclick="window.location.href='index.html'">← Вернуться к списку экспериментов</button>
+</div>
+
+<footer>
+    <p>© 2025 Симуляция физических экспериментов</p>
+    <a href="https://study.physics.itmo.ru/" class="atom-link" target="_blank" rel="noopener">
+        <img src="img/atom.jpg" alt="Атом" title="Перейти на сайт study.physics.itmo.ru">
+    </a>
+</footer>
+</body>
+</html>
+

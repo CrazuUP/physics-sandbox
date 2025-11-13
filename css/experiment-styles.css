@@ -66,12 +66,14 @@ h3 {
     min-height: 400px;
 }
 
-#simulation-canvas {
+.simulation-canvas {
     border: 1px solid #ccc;
     background: white;
     display: block;
     margin: 0 auto;
     max-width: 100%;
+    width: 100%;
+    height: auto;
 }
 
 .controls {
@@ -79,6 +81,7 @@ h3 {
     border-radius: 8px;
     padding: 15px;
     margin: 20px 0;
+    box-shadow: 0 4px 12px rgba(0, 51, 102, 0.08);
 }
 
 .back-btn {
@@ -138,6 +141,196 @@ h3 {
     font-weight: bold;
 }
 
+.controls form,
+.controls .controls-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.parameter-control output {
+    margin-left: auto;
+    min-width: 60px;
+    text-align: right;
+    font-weight: bold;
+    color: #003366;
+}
+
+.control-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.controls-hint {
+    font-size: 0.85rem;
+    color: #335c85;
+    margin-top: 10px;
+}
+
+.controls fieldset {
+    border: 1px solid #c6daff;
+    border-radius: 10px;
+    padding: 15px 18px;
+    background-color: #fdfefe;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.controls legend {
+    font-weight: 600;
+    color: #003366;
+    padding: 0 8px;
+}
+
+.option-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.option-grid.two-columns {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+}
+
+.radio-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.radio-grid label,
+.checkbox-grid label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.checkbox-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.note {
+    font-size: 0.85rem;
+    color: #4d5f73;
+    background-color: #eef4ff;
+    border-left: 3px solid #0066cc;
+    padding: 10px 14px;
+    border-radius: 6px;
+}
+
+.visual-hint {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: #335c85;
+}
+
+.chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background-color: #e1edff;
+    color: #003366;
+    font-size: 0.85rem;
+}
+
+.value-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background-color: #e1edff;
+    font-weight: 600;
+    color: #003366;
+}
+
+.breadcrumb {
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+.breadcrumb a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb span {
+    color: #4d5f73;
+    margin-left: 8px;
+}
+
+section {
+    margin-bottom: 35px;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 25px;
+    align-items: flex-start;
+}
+
+.info-card {
+    background-color: #f2f7ff;
+    border: 1px solid #d8e6ff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 51, 102, 0.08);
+}
+
+.info-card h3 {
+    margin-bottom: 12px;
+}
+
+.info-card ul,
+.info-card ol {
+    padding-left: 20px;
+}
+
+.info-card li + li {
+    margin-top: 8px;
+}
+
+.info-card strong {
+    color: #003366;
+}
+
+.intro {
+    background-color: #f8fbff;
+    border-left: 4px solid #0066cc;
+    border-radius: 10px;
+    padding: 20px 24px;
+    box-shadow: 0 4px 12px rgba(0, 51, 102, 0.08);
+}
+
+.intro p + p {
+    margin-top: 10px;
+}
+
+.intro ul {
+    padding-left: 20px;
+    margin-top: 10px;
+}
+
+.intro li + li {
+    margin-top: 6px;
+}
+
 
 footer {
     background-color: #003366;
@@ -165,6 +358,16 @@ footer {
 }
 
 
+@media (max-width: 1024px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .option-grid.two-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 768px) {
     header h1 {
         font-size: 1.8rem;
@@ -185,7 +388,7 @@ footer {
         margin-bottom: 5px;
     }
 
-    #simulation-canvas {
+    .simulation-canvas {
         width: 100%;
         height: auto;
     }
