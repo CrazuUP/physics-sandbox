@@ -48,6 +48,13 @@
         <h3>Область симуляции</h3>
         <p>JavaScript отобразит траекторию спутника, поле притяжения и след орбиты с цветовой индикацией скорости. При переходе на параболу камера будет автоматически масштабироваться, чтобы удерживать спутник в кадре.</p>
         <canvas id="orbit-canvas" class="simulation-canvas" width="900" height="450" aria-label="Симуляция движения спутника вокруг планеты"></canvas>
+        
+        <!-- Canvas для графиков -->
+        <div id="orbit-graphs-container" style="margin-top: 20px;">
+            <h3>Графики энергии и момента импульса</h3>
+            <canvas id="orbit-graph-canvas" class="simulation-canvas" width="900" height="200" aria-label="Графики энергии и момента импульса"></canvas>
+        </div>
+
         <div class="visual-hint">Отдельно появится мини-график радиус-время и подписи ключевых точек (апогей, перигей, узлы).</div>
     </section>
 
@@ -90,8 +97,8 @@
                     </div>
                     <div class="parameter-control">
                         <label for="orbit-initial-speed">Начальная скорость (км/с)</label>
-                        <input type="range" id="orbit-initial-speed" name="initial_speed" min="4" max="15" step="0.1" value="7.9">
-                        <output id="orbit-initial-speed-value" for="orbit-initial-speed">7.9</output>
+                        <input type="range" id="orbit-initial-speed" name="initial_speed" min="3" max="12" step="0.1" value="4.7">
+                        <output id="orbit-initial-speed-value" for="orbit-initial-speed">4.7</output>
                     </div>
                     <div class="parameter-control">
                         <label for="orbit-flight-angle">Угол запуска относительно горизонтали (°)</label>
@@ -114,7 +121,7 @@
                         Выводить апогей и перигей
                     </label>
                     <label>
-                        <input type="checkbox" id="orbit-show-energy" name="show_energy">
+                        <input type="checkbox" id="orbit-show-energy" name="show_energy" checked>
                         График энергии и момента импульса
                     </label>
                 </div>
@@ -124,7 +131,7 @@
             <button type="button" class="action-btn" id="orbit-start">Запуск симуляции</button>
             <button type="button" class="action-btn" id="orbit-reset">Сброс параметров</button>
         </div>
-        <p class="controls-hint">Функционал управления появится после реализации JavaScript.</p>
+        <p class="controls-hint">Используйте ползунки для изменения параметров орбиты и запустите симуляцию.</p>
     </section>
 
     <section class="info-card">
@@ -166,5 +173,6 @@
     </a>
 </footer>
 </body>
+<script src="js/modelirovanie-dvizheniya-sputnika-vokrug-planety.js"></script>
 </html>
 
