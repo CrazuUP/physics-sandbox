@@ -48,117 +48,56 @@
         <h3>Область симуляции</h3>
         <p>На холсте будет отображаться балка с подвижной опорой, визуализация моментов сил и вектор реакции опоры. Предусмотрено отображение цифровых подписей плеч и результирующего момента.</p>
         <canvas id="lever-canvas" class="simulation-canvas" width="900" height="400" aria-label="Симуляция рычага"></canvas>
-        <div class="visual-hint">При перетаскивании груза появятся направляющие и подписи расстояний от точки опоры. Баланс отображается цветом: зелёный — равновесие, красный — перевес.</div>
+        <div class="visual-hint">
+            <strong>Момент:</strong> $M_{\text{нет}} = <output id="lever-moment-net-value">0.00</output>$ Н·м |
+            <strong>Выигрыш:</strong> $K = <output id="lever-mechanical-win-value">1.0</output>$ |
+            <strong>$F_{\text{треб}}$:</strong> <output id="lever-required-force-value">0.0</output> Н
+            <div id="lever-balance-status">РАВНОВЕСИЕ</div>
+        </div>
     </section>
 
     <section class="controls">
         <h3>Параметры модели</h3>
         <form class="controls-form" aria-label="Настройки рычага">
             <fieldset>
-                <legend>Геометрия балки</legend>
+                <legend>Настройки рычага</legend>
                 <div class="option-grid two-columns">
+
                     <div class="parameter-control">
-                        <label for="lever-length">Длина балки (м)</label>
-                        <input type="range" id="lever-length" name="beam_length" min="0.5" max="4" step="0.1" value="2.4">
-                        <output id="lever-length-value" for="lever-length">2.4</output>
+                        <label for="lever-m1">Масса M1 (кг)</label>
+                        <input type="range" id="lever-m1" name="load_a_mass" min="0.5" max="30" step="0.5" value="10">
+                        <output id="lever-m1-value" for="lever-m1">10.0</output>
                     </div>
                     <div class="parameter-control">
-                        <label for="lever-fulcrum-position">Положение опоры (% длины)</label>
-                        <input type="range" id="lever-fulcrum-position" name="fulcrum_position" min="10" max="90" step="1" value="45">
-                        <output id="lever-fulcrum-position-value" for="lever-fulcrum-position">45</output>
+                        <label for="lever-pos1">Позиция M1 (м)</label>
+                        <input type="range" id="lever-pos1" name="load_a_position" min="0" max="10" step="0.1" value="2">
+                        <output id="lever-pos1-value" for="lever-pos1">2.0</output>
+                    </div>
+
+                    <div class="parameter-control">
+                        <label for="lever-m2">Масса M2 (кг)</label>
+                        <input type="range" id="lever-m2" name="load_b_mass" min="0.5" max="30" step="0.5" value="5">
+                        <output id="lever-m2-value" for="lever-m2">5.0</output>
                     </div>
                     <div class="parameter-control">
-                        <label for="lever-beam-mass">Масса балки (кг)</label>
-                        <input type="range" id="lever-beam-mass" name="beam_mass" min="0" max="10" step="0.5" value="2">
-                        <output id="lever-beam-mass-value" for="lever-beam-mass">2.0</output>
+                        <label for="lever-pos2">Позиция M2 (м)</label>
+                        <input type="range" id="lever-pos2" name="load_b_position" min="0" max="10" step="0.1" value="8">
+                        <output id="lever-pos2-value" for="lever-pos2">8.0</output>
                     </div>
-                    <div class="parameter-control">
-                        <label for="lever-beam-cog">Центр тяжести балки (% длины)</label>
-                        <input type="range" id="lever-beam-cog" name="beam_cog" min="0" max="100" step="1" value="50">
-                        <output id="lever-beam-cog-value" for="lever-beam-cog">50</output>
+
+                    <div class="parameter-control full-width">
+                        <label for="lever-fulcrum-pos">Положение опоры (м)</label>
+                        <input type="range" id="lever-fulcrum-pos" name="fulcrum_position" min="0.1" max="9.9" step="0.1" value="5">
+                        <output id="lever-fulcrum-pos-value" for="lever-fulcrum-pos">5.0</output>
                     </div>
                 </div>
             </fieldset>
 
-            <fieldset>
-                <legend>Грузы</legend>
-                <div class="option-grid two-columns">
-                    <div class="parameter-control">
-                        <label for="lever-load-a-mass">Масса груза A (кг)</label>
-                        <input type="range" id="lever-load-a-mass" name="load_a_mass" min="0.5" max="30" step="0.5" value="8">
-                        <output id="lever-load-a-mass-value" for="lever-load-a-mass">8.0</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="lever-load-a-position">Позиция A (% длины)</label>
-                        <input type="range" id="lever-load-a-position" name="load_a_position" min="0" max="100" step="1" value="10">
-                        <output id="lever-load-a-position-value" for="lever-load-a-position">10</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="lever-load-b-mass">Масса груза B (кг)</label>
-                        <input type="range" id="lever-load-b-mass" name="load_b_mass" min="0.5" max="30" step="0.5" value="5">
-                        <output id="lever-load-b-mass-value" for="lever-load-b-mass">5.0</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="lever-load-b-position">Позиция B (% длины)</label>
-                        <input type="range" id="lever-load-b-position" name="load_b_position" min="0" max="100" step="1" value="80">
-                        <output id="lever-load-b-position-value" for="lever-load-b-position">80</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="lever-load-c-mass">Масса груза C (доп., кг)</label>
-                        <input type="range" id="lever-load-c-mass" name="load_c_mass" min="0" max="15" step="0.5" value="0">
-                        <output id="lever-load-c-mass-value" for="lever-load-c-mass">0.0</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="lever-load-c-position">Позиция C (% длины)</label>
-                        <input type="range" id="lever-load-c-position" name="load_c_position" min="0" max="100" step="1" value="55">
-                        <output id="lever-load-c-position-value" for="lever-load-c-position">55</output>
-                    </div>
-                </div>
-                <p class="note">Если дополнительный груз C не нужен, оставьте массу равной нулю — JavaScript просто не будет отображать этот объект.</p>
-            </fieldset>
-
-            <fieldset>
-                <legend>Режим визуализации</legend>
-                <div class="checkbox-grid" role="group" aria-label="Дополнительные слои">
-                    <label>
-                        <input type="checkbox" id="lever-show-moments" name="show_moments" checked>
-                        Показывать моменты сил
-                    </label>
-                    <label>
-                        <input type="checkbox" id="lever-show-arms" name="show_arms" checked>
-                        Подписывать длину плеч
-                    </label>
-                    <label>
-                        <input type="checkbox" id="lever-lock-balance" name="lock_balance">
-                        Держать рычаг в равновесии (турнирный режим)
-                    </label>
-                </div>
-            </fieldset>
+            <div class="controls-actions">
+                <button type="button" id="lever-start">Проверить равновесие</button>
+                <button type="button" id="lever-reset">Сброс</button>
+            </div>
         </form>
-        <div class="control-actions">
-            <button type="button" class="action-btn" id="lever-start">Запуск симуляции</button>
-            <button type="button" class="action-btn" id="lever-reset">Сброс параметров</button>
-        </div>
-        <p class="controls-hint">Функциональность управления будет реализована на JavaScript.</p>
-    </section>
-
-    <section class="info-card">
-        <h3>Ход исследования</h3>
-        <ol>
-            <li>Установите равновесие, подбирая массы и плечи.</li>
-            <li>Проанализируйте влияние изменения плеча на необходимую силу.</li>
-            <li>Сравните положения опоры — ближе к тяжёлому или лёгкому грузу.</li>
-            <li>Сформулируйте вывод о механическом выигрыше.</li>
-        </ol>
-    </section>
-
-    <section class="info-card">
-        <h3>Методические комментарии</h3>
-        <ul>
-            <li>Попросите обучающихся построить график зависимости силы от плеча.</li>
-            <li>Предложите обсудить реальные примеры рычагов первого, второго и третьего рода.</li>
-            <li>В качестве расширения добавьте внешнюю силу и оцените статический момент.</li>
-        </ul>
     </section>
 
     <section class="info-card">
@@ -171,7 +110,6 @@
         <p class="note">Разметка и стили готовы для этих элементов; останется только добавить обработчики и расчёты.</p>
     </section>
 
-    <button class="back-btn" onclick="window.location.href='index.html'">← Вернуться к списку экспериментов</button>
 </div>
 
 <footer>
@@ -181,5 +119,5 @@
     </a>
 </footer>
 </body>
+<script src="js/modelirovanie-rychaga.js"></script>
 </html>
-

@@ -48,6 +48,15 @@
         <h3>Область симуляции</h3>
         <p>В этой зоне появится анимация движения маятника, отображение траектории в фазовом пространстве и графики угла/скорости. Холст предназначен для визуализации колебаний и силы сопротивления, действующей на маятник.</p>
         <canvas id="damped-pendulum-canvas" class="simulation-canvas" width="900" height="450" aria-label="Симуляция демпфированных колебаний маятника"></canvas>
+
+        <!-- Добавьте эти два canvas прямо под основным -->
+        <div class="canvas-row" style="display:flex; gap:16px; margin-top:12px;">
+            <canvas id="pendulum-phase-canvas" class="simulation-canvas" width="440" height="300"
+                    aria-label="Фазовый портрет маятника (θ, ω)"></canvas>
+            <canvas id="pendulum-energy-canvas" class="simulation-canvas" width="440" height="300"
+                    aria-label="График энергии маятника во времени"></canvas>
+        </div>
+
         <div class="visual-hint">Дополнительно будут отображены линии уровня энергии и точки пересечения с осью, чтобы показать изменение фазового портрета.</div>
     </section>
 
@@ -152,7 +161,6 @@
             <div class="chip">Указатели фазовых переходов (критический режим)</div>
             <div class="chip">Сравнение аналитического решения с численным</div>
         </div>
-        <p class="note">Все элементы уже зарезервированы разметкой, чтобы друг мог подключить JavaScript без дополнительных правок HTML/CSS.</p>
     </section>
 
     <button class="back-btn" onclick="window.location.href='index.html'">← Вернуться к списку экспериментов</button>
@@ -165,5 +173,5 @@
     </a>
 </footer>
 </body>
+<script src="js/dempfirovannye-kolebaniya-mayatnika.js"></script>
 </html>
-
