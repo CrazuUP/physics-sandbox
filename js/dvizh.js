@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         drawSingleGraph(ctx, gx, gy, gw, gh, sim.history, 'v', '#d35400', 'Скорость v(t), м/с');
         gx += gw + 40;
-        drawSingleGraph(ctx, gx, gy, gw, gh, sim.history, 'x', '#0066cc', 'Путь s(t), м');
+        drawSingleGraph(ctx, gx, gy, gw, gh, sim.history, 'x', '#0066cc', 'Перемещение s(t), м');
         gx += gw + 40;
         drawSingleGraph(ctx, gx, gy, gw, gh, sim.history, 'work', '#dc3545', 'Работа трения Aтр(t), Дж');
     }
