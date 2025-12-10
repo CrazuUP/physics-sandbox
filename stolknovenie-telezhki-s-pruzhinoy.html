@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="css/experiment-styles.css">
 </head>
 <body>
+<script src="pruzh.js"></script>
 <header>
     <h1>Столкновение тележки с пружиной</h1>
     <div class="creators">Создатели: Ипантьев Иван, Гончаров Максим, Ахроров Кароматуллохон</div>
@@ -46,8 +48,8 @@
 
     <section class="simulation-area">
         <h3>Область симуляции</h3>
-        <p>После реализации JavaScript здесь появится анимация движения тележки, деформации пружины и графики энергии. Будет отображаться сетка времени, отметка максимального сжатия и режим работы демпфирования.</p>
-        <canvas id="cart-spring-canvas" class="simulation-canvas" width="900" height="400" aria-label="Симуляция столкновения тележки с пружиной"></canvas>
+        <p>Здесь анимация движения тележки, деформации пружины и графики энергии. Отображается сетка времени, отметка максимального сжатия и режим демпфирования.</p>
+        <canvas id="cart-spring-canvas" class="simulation-canvas" width="900" height="450" aria-label="Симуляция столкновения тележки с пружиной"></canvas>
         <div class="visual-hint">Индикаторы на сцене покажут распределение энергий, а также подпишут момент остановки тележки.</div>
     </section>
 
@@ -59,22 +61,26 @@
                 <div class="option-grid two-columns">
                     <div class="parameter-control">
                         <label for="cart-mass">Масса тележки (кг)</label>
-                        <input type="range" id="cart-mass" name="cart_mass" min="0.5" max="5" step="0.1" value="1.5">
+                        <input type="range" id="cart-mass" name="cart_mass" min="0.5" max="100" step="0.1" value="1.5">
+                        <input type="number" id="cart-mass-number" min="0.5" max="100" step="0.1" value="1.5">
                         <output id="cart-mass-value" for="cart-mass">1.5</output>
                     </div>
                     <div class="parameter-control">
                         <label for="cart-speed">Начальная скорость (м/с)</label>
-                        <input type="range" id="cart-speed" name="cart_speed" min="0" max="10" step="0.5" value="4">
+                        <input type="range" id="cart-speed" name="cart_speed" min="0" max="50" step="0.5" value="4">
+                        <input type="number" id="cart-speed-number" min="0" max="50" step="0.5" value="4">
                         <output id="cart-speed-value" for="cart-speed">4.0</output>
                     </div>
                     <div class="parameter-control">
                         <label for="cart-friction">Сопротивление движения</label>
-                        <input type="range" id="cart-friction" name="cart_friction" min="0" max="0.4" step="0.01" value="0.02">
+                        <input type="range" id="cart-friction" name="cart_friction" min="0" max="1" step="0.01" value="0.02">
+                        <input type="number" id="cart-friction-number" min="0" max="1" step="0.01" value="0.02">
                         <output id="cart-friction-value" for="cart-friction">0.02</output>
                     </div>
                     <div class="parameter-control">
                         <label for="cart-position">Начальное расстояние до пружины (м)</label>
-                        <input type="range" id="cart-position" name="cart_position" min="0" max="3" step="0.1" value="1.2">
+                        <input type="range" id="cart-position" name="cart_position" min="0" max="10" step="0.1" value="1.2">
+                        <input type="number" id="cart-position-number" min="0" max="10" step="0.1" value="1.2">
                         <output id="cart-position-value" for="cart-position">1.2</output>
                     </div>
                 </div>
@@ -85,22 +91,26 @@
                 <div class="option-grid two-columns">
                     <div class="parameter-control">
                         <label for="spring-stiffness">Жёсткость пружины (Н/м)</label>
-                        <input type="range" id="spring-stiffness" name="spring_stiffness" min="50" max="500" step="10" value="200">
+                        <input type="range" id="spring-stiffness" name="spring_stiffness" min="50" max="5000" step="10" value="200">
+                        <input type="number" id="spring-stiffness-number" min="50" max="5000" step="10" value="200">
                         <output id="spring-stiffness-value" for="spring-stiffness">200</output>
                     </div>
                     <div class="parameter-control">
                         <label for="spring-preload">Предварительное сжатие (см)</label>
-                        <input type="range" id="spring-preload" name="spring_preload" min="0" max="10" step="0.5" value="0">
+                        <input type="range" id="spring-preload" name="spring_preload" min="0" max="50" step="0.5" value="0">
+                        <input type="number" id="spring-preload-number" min="0" max="50" step="0.5" value="0">
                         <output id="spring-preload-value" for="spring-preload">0</output>
                     </div>
                     <div class="parameter-control">
                         <label for="cart-damping">Коэффициент потерь</label>
-                        <input type="range" id="cart-damping" name="damping" min="0" max="0.5" step="0.01" value="0.05">
+                        <input type="range" id="cart-damping" name="damping" min="0" max="2" step="0.01" value="0.05">
+                        <input type="number" id="cart-damping-number" min="0" max="2" step="0.01" value="0.05">
                         <output id="cart-damping-value" for="cart-damping">0.05</output>
                     </div>
                     <div class="parameter-control">
                         <label for="contact-restitution">Коэффициент восстановления</label>
                         <input type="range" id="contact-restitution" name="restitution" min="0" max="1" step="0.05" value="0.8">
+                        <input type="number" id="contact-restitution-number" min="0" max="1" step="0.05" value="0.8">
                         <output id="contact-restitution-value" for="contact-restitution">0.80</output>
                     </div>
                 </div>
@@ -123,8 +133,9 @@
         <div class="control-actions">
             <button type="button" class="action-btn" id="cart-start">Запуск симуляции</button>
             <button type="button" class="action-btn" id="cart-reset">Сброс параметров</button>
+            <button type="button" class="action-btn" id="stop-graphs">Остановить графики</button>
         </div>
-        <p class="controls-hint">Интерактивность появится после добавления JavaScript.</p>
+        <p class="controls-hint">Теперь с отсчётом перед стартом для удобства просмотра.</p>
     </section>
 
     <section class="info-card">
@@ -137,24 +148,7 @@
         </ol>
     </section>
 
-    <section class="info-card">
-        <h3>Методические комментарии</h3>
-        <ul>
-            <li>Предложите студентам построить энергетические диаграммы.</li>
-            <li>Обратите внимание на закон сохранения импульса при отскоке.</li>
-            <li>В качестве расширения рассмотрите взаимодействие двух тележек с пружиной между ними.</li>
-        </ul>
-    </section>
 
-    <section class="info-card">
-        <h3>План визуализации</h3>
-        <div class="chip-list">
-            <div class="chip">Диаграмма энергии с цветовой индикацией</div>
-            <div class="chip">Подсветка момента максимального сжатия</div>
-            <div class="chip">Интерактивный индикатор режима (отскок / залипание)</div>
-        </div>
-        <p class="note">HTML-структура уже содержит все элементы, которые затем подключит JavaScript — можно сразу перейти к логике расчёта и анимации.</p>
-    </section>
 
     <button class="back-btn" onclick="window.location.href='index.html'">← Вернуться к списку экспериментов</button>
 </div>
@@ -165,6 +159,7 @@
         <img src="img/atom.jpg" alt="Атом" title="Перейти на сайт study.physics.itmo.ru">
     </a>
 </footer>
+
+
 </body>
 </html>
-
