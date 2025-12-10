@@ -1,174 +1,252 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Движение с постоянной силой и трением | Симуляция физических экспериментов</title>
-    <link rel="stylesheet" href="css/experiment-styles.css">
-</head>
-<body>
-<header>
-    <h1>Движение с постоянной силой и трением</h1>
-    <div class="creators">Создатели: Ипантьев Иван, Гончаров Максим, Ахроров Кароматуллохон</div>
-</header>
 
-<div class="container">
-    <nav class="breadcrumb" aria-label="Хлебные крошки">
-        <a href="index.html">Главная</a>
-        <span>Движение с постоянной силой и трением</span>
-    </nav>
+<DOCUMENT filename="dvizhenie-s-postoyannoy-siloy-i-treniem.html">
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Движение с постоянной силой и трением</title>
+        <link rel="stylesheet" href="css/experiment-styles.css">
+        <style>
+            .input-group {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                width: 100%;
+            }
+            .input-group input[type="range"] {
+                flex: 1;
+            }
+            .input-group input[type="number"] {
+                width: 80px;
+                padding: 4px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+            .unit {
+                width: 40px;
+                font-size: 0.9em;
+                color: #555;
+            }
+            .checkbox-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                margin-top: 15px;
+            }
+            .action-btn {
+                padding: 10px 15px;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 1.1rem;
+                transition: background-color 0.3s;
+            }
+            #btn-start { background-color: #0066cc; color: white; }
+            #btn-reset { background-color: #d9534f; color: white; }
 
-    <section class="intro">
-        <h2>Краткое описание</h2>
-        <p>Эксперимент моделирует прямоугольный брус, закреплённый к нерастяжимому и невесомому канату, который тянут вправо постоянной силой. Можно включить горизонтальное движение или расположить брус на наклонной плоскости и рассчитать проекции веса <strong>mg</strong> вдоль и перпендикулярно плоскости, чтобы увидеть, как трение меняет ускорение.</p>
-        <p>Симуляция покажет диаграмму сил, траекторию движения центра масс и графики скорости/ускорения. Угол наклона настраивается из набора типовых значений или задаётся произвольно — это позволяет позже расширить сценарий до движения по наклонной поверхности.</p>
-    </section>
+            /* Легенда для тепловой карты */
+            .heatmap-legend-container {
+                margin-top: 10px;
+                padding: 10px;
+                background: #f9f9f9;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                font-size: 0.9rem;
+            }
+            .heatmap-gradient {
+                width: 200px;
+                height: 15px;
+                background: linear-gradient(90deg, blue, cyan, lime, yellow, red);
+                border-radius: 3px;
+                border: 1px solid #ccc;
+            }
+            .legend-labels {
+                display: flex;
+                justify-content: space-between;
+                width: 200px;
+                font-size: 0.8rem;
+                color: #666;
+                margin-top: 2px;
+            }
 
-    <div class="content-grid">
-        <section class="info-card">
-            <h3>Цели эксперимента</h3>
-            <ul>
-                <li>Расследовать зависимость ускорения тела от величины приложенной силы.</li>
-                <li>Оценить влияние коэффициента трения на установившуюся скорость движения.</li>
-                <li>Построить графики изменения скорости и пути во времени.</li>
-            </ul>
+            /* НОВЫЕ СТИЛИ ДЛЯ БЛОКА СТАТИСТИКИ (Ваша "серая таблица") */
+            .simulation-area {
+                position: relative; /* Необходим для позиционирования stats-block */
+            }
+            #stats-block {
+                position: absolute;
+                bottom: 120px;
+                right: 30px;
+                width: 160px;
+                background-color: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 10px;
+                border-radius: 5px;
+                font-family: Consolas, monospace;
+                font-size: 14px;
+                z-index: 100;
+            }
+            #stats-block p {
+                margin: 0 0 5px 0;
+            }
+            #stats-block p:last-child {
+                margin-bottom: 0;
+            }
+        </style>
+    </head>
+    <body>
+    <header>
+        <h1>Движение с постоянной силой и трением</h1>
+        <div class="creators">Создатели: Ипантьев Иван, Гончаров Максим, Ахроров Кароматуллохон</div>
+    </header>
+
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="index.html">Главная</a>
+            <span>Движение с постоянной силой и трением</span>
+        </nav>
+
+        <section class="intro">
+            <h2>Краткое описание</h2>
+            <p>Эксперимент моделирует движение бруса под действием постоянной силы тяги с учетом трения. Вы можете изменять массу тела, силу, коэффициенты трения и наклон поверхности. Симуляция визуализирует силы, скорость, ускорение и выделяет участки интенсивного трения (нагрев) с помощью тепловой карты.</p>
         </section>
 
-        <section class="info-card">
-            <h3>Что подготовить</h3>
-            <ul>
-                <li>Калькулятор или таблицу значений для анализа результатов.</li>
-                <li>Методические материалы по второму закону Ньютона.</li>
-                <li>Формулы для расчёта силы трения: <strong>F<sub>тр</sub> = μN</strong>.</li>
-            </ul>
+        <div class="content-grid">
+            <section class="info-card">
+                <h3>Цели эксперимента</h3>
+                <ul>
+                    <li>Исследовать зависимость ускорения от приложенной силы и массы (2-й закон Ньютона).</li>
+                    <li>Оценить влияние угла наклона на движение (проекции сил тяжести).</li>
+                    <li>Изучить разницу между трением покое и трением скольжения.</li>
+                    <li>Проанализировать графики зависимости скорости и пути от времени.</li>
+                </ul>
+            </section>
+            <section class="info-card">
+                <h3>Что наблюдать</h3>
+                <p>Следите за вектором трения при смене направления движения и за цветом следа за бруском (интенсивность работы сил трения).</p>
+            </section>
+        </div>
+
+        <section class="simulation-area">
+            <h3>Область симуляции</h3>
+
+            <div id="stats-block">
+                <p>t = 0.00 с</p>
+                <p>x = 0.00 м</p>
+                <p>v = 0.00 м/с</p>
+                <p>Aтр = 0 Дж</p>
+            </div>
+
+            <canvas id="constant-force-canvas" class="simulation-canvas" width="900" height="550"></canvas>
+
+            <div class="heatmap-legend-container" id="heatmap-legend" style="display: none;">
+                <strong>Тепловая карта (Работа трения):</strong>
+                <div>
+                    <div class="heatmap-gradient"></div>
+                    <div class="legend-labels">
+                        <span>Холодно (Малое трение)</span>
+                        <span>Горячо (Интенсивное)</span>
+                    </div>
+                </div>
+                <p style="margin: 0; font-size: 0.85rem; color: #555;">Показывает интенсивность нагрева поверхности (A = F<sub>тр</sub> · v)</p>
+            </div>
         </section>
+
+        <section class="controls">
+            <h3>Параметры модели</h3>
+            <form class="controls-form" onsubmit="return false;">
+                <fieldset>
+                    <legend>Параметры тела и силы</legend>
+
+                    <div class="parameter-control">
+                        <label>Масса тела (m)</label>
+                        <div class="input-group">
+                            <input type="range" id="input-mass-range" min="1" max="100" step="1" value="5">
+                            <input type="number" id="input-mass-num" min="0.1" max="10000" step="0.1" value="5">
+                            <span class="unit">кг</span>
+                        </div>
+                    </div>
+
+                    <div class="parameter-control">
+                        <label>Сила тяги (F)</label>
+                        <div class="input-group">
+                            <input type="range" id="input-force-range" min="0" max="500" step="1" value="80">
+                            <input type="number" id="input-force-num" min="0" max="50000" step="1" value="80">
+                            <span class="unit">Н</span>
+                        </div>
+                    </div>
+
+                    <div class="parameter-control">
+                        <label>Коэф. трения покоя (μ_s)</label>
+                        <div class="input-group">
+                            <input type="range" id="input-friction-static-range" min="0" max="1" step="0.01" value="0.3">
+                            <input type="number" id="input-friction-static-num" min="0" max="5" step="0.01" value="0.3">
+                            <span class="unit">б/р</span>
+                        </div>
+                    </div>
+
+                    <div class="parameter-control">
+                        <label>Коэф. трения скольж. (μ_k)</label>
+                        <div class="input-group">
+                            <input type="range" id="input-friction-kinetic-range" min="0" max="1" step="0.01" value="0.2">
+                            <input type="number" id="input-friction-kinetic-num" min="0" max="5" step="0.01" value="0.2">
+                            <span class="unit">б/р</span>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Геометрия и Среда</legend>
+                    <div class="option-grid two-columns">
+                        <div class="parameter-control">
+                            <label>Угол наклона (α)</label>
+                            <div class="input-group">
+                                <input type="range" id="input-angle-range" min="-85" max="85" step="1" value="0">
+                                <input type="number" id="input-angle-num" min="-89" max="89" step="0.1" value="0">
+                                <span class="unit">°</span>
+                            </div>
+                        </div>
+
+                        <div class="parameter-control">
+                            <label>Длина пути (S)</label>
+                            <div class="input-group">
+                                <input type="range" id="input-length-range" min="5" max="200" step="1" value="20">
+                                <input type="number" id="input-length-num" min="5" max="5000" step="1" value="20">
+                                <span class="unit">м</span>
+                            </div>
+                        </div>
+
+                        <div class="parameter-control">
+                            <label>Начальная поз. (X0)</label>
+                            <div class="input-group">
+                                <input type="range" id="input-start-range" min="0" max="50" step="1" value="0">
+                                <input type="number" id="input-start-num" min="0" max="4900" step="1" value="0">
+                                <span class="unit">м</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-grid">
+                        <label><input type="checkbox" id="check-vectors" checked> Векторы сил</label>
+                        <label><input type="checkbox" id="check-graphs" checked> Графики v(t), s(t)</label>
+                        <label><input type="checkbox" id="check-heatmap" checked> Тепловая карта трения</label>
+                    </div>
+                </fieldset>
+            </form>
+
+            <div class="control-actions">
+                <button type="button" class="action-btn" id="btn-start">Запуск / Пауза</button>
+                <button type="button" class="action-btn" id="btn-reset">Сброс</button>
+            </div>
+        </section>
+
+        <button class="back-btn" onclick="window.location.href='index.html'">← На главную</button>
     </div>
 
-    <section class="simulation-area">
-        <h3>Область симуляции</h3>
-        <p>Интерактивная сцена отобразит брус, канат и направляющие векторы. При включённом наклоне появится плоскость с нормалью и компонентами веса. Дополнительно будут показаны графики зависимости скорости и пути от времени.</p>
-        <canvas id="constant-force-canvas" class="simulation-canvas" width="900" height="450" aria-label="Симуляция движения с постоянной силой и трением"></canvas>
-        <div class="visual-hint">Планируется подсветка векторов <span class="value-badge">F</span>, <span class="value-badge">F<sub>тр</sub></span>, <span class="value-badge">N</span> и компонентов <span class="value-badge">mg·sin(α)</span>, <span class="value-badge">mg·cos(α)</span> при выборе наклонной плоскости.</div>
-    </section>
-
-    <section class="controls">
-        <h3>Параметры модели</h3>
-        <form class="controls-form" aria-label="Настройка параметров движения">
-            <fieldset>
-                <legend>Параметры тела и силы</legend>
-                <div class="parameter-control">
-                    <label for="constant-force-mass">Масса тела (кг)</label>
-                    <input type="range" id="constant-force-mass" name="mass" min="1" max="20" value="5" step="1">
-                    <output id="constant-force-mass-value" for="constant-force-mass">5</output>
-                </div>
-                <div class="parameter-control">
-                    <label for="constant-force-force">Сила тяги (Н)</label>
-                    <input type="range" id="constant-force-force" name="force" min="10" max="200" value="80" step="5">
-                    <output id="constant-force-force-value" for="constant-force-force">80</output>
-                </div>
-                <div class="parameter-control">
-                    <label for="constant-force-friction">Коэффициент трения скольжения</label>
-                    <input type="range" id="constant-force-friction" name="friction" min="0" max="1" value="0.2" step="0.01">
-                    <output id="constant-force-friction-value" for="constant-force-friction">0.20</output>
-                </div>
-                <div class="parameter-control">
-                    <label for="constant-force-static-friction">Коэффициент трения покоя</label>
-                    <input type="range" id="constant-force-static-friction" name="static_friction" min="0" max="1.2" value="0.25" step="0.01">
-                    <output id="constant-force-static-friction-value" for="constant-force-static-friction">0.25</output>
-                </div>
-            </fieldset>
-
-            <fieldset>
-                <legend>Наклон и дополнительные параметры</legend>
-                <div class="option-grid two-columns">
-                    <div class="parameter-control">
-                        <label for="constant-force-angle-presets">Угол наклона (°)</label>
-                        <select id="constant-force-angle-presets" name="angle_preset">
-                            <option value="0">0 — горизонт</option>
-                            <option value="15">15°</option>
-                            <option value="30">30°</option>
-                            <option value="45">45°</option>
-                            <option value="60">60°</option>
-                        </select>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="constant-force-angle-custom">Произвольный угол (°)</label>
-                        <input type="number" id="constant-force-angle-custom" name="angle_custom" min="0" max="75" step="0.1" value="0" placeholder="Например, 37.5">
-                    </div>
-                    <div class="parameter-control">
-                        <label for="constant-force-normal-force">Внешнее давление (Н)</label>
-                        <input type="range" id="constant-force-normal-force" name="normal_extra" min="0" max="200" value="0" step="5">
-                        <output id="constant-force-normal-force-value" for="constant-force-normal-force">0</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="constant-force-length">Длина пути наблюдения (м)</label>
-                        <input type="range" id="constant-force-length" name="track_length" min="5" max="60" value="20" step="1">
-                        <output id="constant-force-length-value" for="constant-force-length">20</output>
-                    </div>
-                </div>
-                <div class="checkbox-grid" role="group" aria-label="Визуализация и расчёты">
-                    <label>
-                        <input type="checkbox" id="constant-force-show-vectors" name="show_vectors" checked>
-                        Показывать диаграмму сил
-                    </label>
-                    <label>
-                        <input type="checkbox" id="constant-force-show-graph" name="show_graphs" checked>
-                        Строить графики v(t) и s(t)
-                    </label>
-                    <label>
-                        <input type="checkbox" id="constant-force-stopping-test" name="stopping_test">
-                        Оценивать шанс срыва с места (F<sub>тяги</sub> ≤ F<sub>тр.пок</sub>)
-                    </label>
-                </div>
-                <p class="note">При выборе произвольного угла значение из списка фиксированных будет проигнорировано; позже JavaScript синхронизирует оба поля.</p>
-            </fieldset>
-        </form>
-        <div class="control-actions">
-            <button type="button" class="action-btn" id="constant-force-start">Запуск симуляции</button>
-            <button type="button" class="action-btn" id="constant-force-reset">Сброс параметров</button>
-        </div>
-        <p class="controls-hint">Функциональность кнопок будет реализована на этапе разработки JavaScript.</p>
-    </section>
-
-    <section class="info-card">
-        <h3>Ход исследования</h3>
-        <ol>
-            <li>Выберите массу тела и величину силы, оцените ожидаемое ускорение по формуле <strong>a = (F - F<sub>тр</sub>)/m</strong>.</li>
-            <li>Измените коэффициент трения и сравните форму графиков скорости и пути.</li>
-            <li>Проведите серию запусков с одинаковой силой, но разной массой и сделайте выводы о влиянии инерции.</li>
-            <li>Сравните теоретические расчёты с данными симуляции.</li>
-        </ol>
-    </section>
-
-    <section class="info-card">
-        <h3>Методические комментарии</h3>
-        <p>Рекомендуется напоминать студентам про направление силы трения, а также про то, что при установившемся движении результатирующая сила равна нулю.</p>
-        <ul>
-            <li>Попросите обучающихся построить таблицу «сила — ускорение» и определить угловой коэффициент.</li>
-            <li>Отдельно обсудите роль нормальной реакции опоры и её связь с силой тяжести.</li>
-            <li>Как расширение задания — рассмотреть режим движения при превышении силы трения.</li>
-        </ul>
-    </section>
-
-    <section class="info-card">
-        <h3>Элементы визуализации</h3>
-        <div class="chip-list">
-            <div class="chip">Распределение сил в точке крепления нити</div>
-            <div class="chip">График ускорения с маркировкой переходов между режимами</div>
-            <div class="chip">Тепловая карта интенсивности трения вдоль пути</div>
-        </div>
-        <p class="note">Эти элементы запланированы к добавлению на этапе JavaScript — текущая страница предоставляет разметку и стили под будущую логику.</p>
-    </section>
-
-    <button class="back-btn" onclick="window.location.href='index.html'">← Вернуться к списку экспериментов</button>
-</div>
-
-<footer>
-    <p>© 2025 Симуляция физических экспериментов</p>
-    <a href="https://study.physics.itmo.ru/" class="atom-link" target="_blank" rel="noopener">
-        <img src="img/atom.jpg" alt="Атом" title="Перейти на сайт study.physics.itmo.ru">
-    </a>
-</footer>
-</body>
-</html>
-
+    <script src="script.js"></script>
+    </body>
+    </html></DOCUMENT>
