@@ -2,194 +2,456 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <title>Столкновение тел — с осями X и Y</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D-столкновения тел на плоскости | Симуляция физических экспериментов</title>
-    <link rel="stylesheet" href="css/experiment-styles.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:#0f172a;color:#e0e7ff;font-family:Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column;}
+        header{background:#1e40af;padding:20px;text-align:center;color:white;position:relative;}
+        header h1{font-size:2.5rem;}
+        .back-btn{
+            position:absolute;left:20px;top:50%;transform:translateY(-50%);
+            padding:10px 18px;background:#1e3a8a;color:white;border:none;border-radius:10px;
+            font-size:1rem;cursor:pointer;transition:0.3s;
+        }
+        .back-btn:hover{background:#1e40af;transform:translateY(-50%) scale(1.05);}
+        .container{flex:1;display:flex;gap:20px;padding:20px;}
+        canvas{background:#0a0e1a;border:3px solid #3b82f6;border-radius:16px;flex:1;box-shadow:0 10px 40px #0008;}
+        .controls{width:380px;background:rgba(30,64,175,0.2);border-radius:16px;padding:20px;border:1px solid #3b82f6;}
+        h2{color:#60a5fa;margin:25px 0 10px 0;font-size:1.4rem;}
+        label{display:block;margin:12px 0 5px;font-weight:bold;}
+        input[type=range]{width:100%;height:10px;border-radius:5px;background:#1e293b;outline:none;}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#60a5fa;cursor:pointer;box-shadow:0 0 15px #60a5fa88;}
+        .value{float:right;font-weight:bold;color:#93c5fd;}
+        .btn{margin-top:20px;width:100%;padding:14px;background:#3b82f6;color:white;border:none;border-radius:10px;font-size:1.2rem;cursor:pointer;transition:0.3s;}
+        .btn:hover{background:#2563eb;}
+        .btn.pause{background:#f59e0b;}
+        .btn.pause:hover{background:#d97706;}
+        .btn.reset{background:#6b7280;}
+        .btn.reset:hover{background:#4b5563;}
+        .checkboxes{margin:20px 0;}
+        .checkboxes label{display:flex;align-items:center;gap:10px;cursor:pointer;}
+        .hint{text-align:center;margin-top:15px;color:#93c5fd;font-size:1.1rem;}
+        @media(max-width:1000px){
+            .container{flex-direction:column;}
+            .controls{width:100%;}
+            .back-btn{position:static;transform:none;margin-bottom:10px;display:inline-block;}
+        }
+    </style>
 </head>
 <body>
 <header>
-    <h1>2D-столкновения тел на плоскости</h1>
-    <div class="creators">Создатели: Ипантьев Иван, Гончаров Максим, Ахроров Кароматуллохон</div>
+    <button class="back-btn" onclick="window.location.href='index.html'">Вернуться к списку экспериментов</button>
+    <h1>Столкновение тел в 2D</h1>
+    <p style="opacity:0.9;margin-top:8px;">Система координат • Vx и Vy • Всё работает!</p>
 </header>
 
 <div class="container">
-    <nav class="breadcrumb" aria-label="Хлебные крошки">
-        <a href="index.html">Главная</a>
-        <span>2D-столкновения тел на плоскости</span>
-    </nav>
+    <canvas id="canvas"></canvas>
+    <div class="controls">
+        <h2>Шар A (красный)</h2>
+        <label>Масса: <span class="value" id="massA-val">10</span> кг</label>
+        <input type="range" id="massA" min="1" max="200" value="10">
+        <label>Радиус: <span class="value" id="radiusA-val">40</span> см</label>
+        <input type="range" id="radiusA" min="20" max="120" value="40">
+        <label>Vx: <span class="value" id="vxA-val">8.0</span> м/с</label>
+        <input type="range" id="vxA" min="-30" max="30" step="0.1" value="8">
+        <label>Vy: <span class="value" id="vyA-val">0.0</span> м/с</label>
+        <input type="range" id="vyA" min="-30" max="30" step="0.1" value="0">
 
-    <section class="intro">
-        <h2>Краткое описание</h2>
-        <p>В симуляции участвуют две круглые тележки (аналог бильярдных шаров), движущиеся по бесконечной плоскости. Пользователь задаёт массы, скорости и направления движения тел, а также выбирает тип удара — упругий или неупругий. После столкновения отображаются новые векторы импульса и траектории.</p>
-        <p>Режим ввода направления реализуется двумя способами: через числовые углы или интерактивное «прицеливание» мышью, как в мобильных бильярдных играх. При высоких скоростях объекты могут разлетаться далеко — предусмотрена подстройка масштаба сцены.</p>
-    </section>
+        <h2>Шар B (синий)</h2>
+        <label>Масса: <span class="value" id="massB-val">30</span> кг</label>
+        <input type="range" id="massB" min="1" max="200" value="30">
+        <label>Радиус: <span class="value" id="radiusB-val">60</span> см</label>
+        <input type="range" id="radiusB" min="20" max="120" value="60">
+        <label>Vx: <span class="value" id="vxB-val">0.0</span> м/с</label>
+        <input type="range" id="vxB" min="-30" max="30" step="0.1" value="0">
+        <label>Vy: <span class="value" id="vyB-val">0.0</span> м/с</label>
+        <input type="range" id="vyB" min="-30" max="30" step="0.1" value="0">
 
-    <div class="content-grid">
-        <section class="info-card">
-            <h3>Цели эксперимента</h3>
-            <ul>
-                <li>Проанализировать изменение импульса каждой частицы при различных типах столкновений.</li>
-                <li>Построить векторы импульса до и после взаимодействия.</li>
-                <li>Проверить закон сохранения полной энергии для упругих столкновений.</li>
-            </ul>
-        </section>
+        <h2>Общие</h2>
+        <label>Упругость: <span class="value" id="restitution-val">0.98</span></label>
+        <input type="range" id="restitution" min="0" max="1" step="0.01" value="0.98">
 
-        <section class="info-card">
-            <h3>Теоретические формулы</h3>
-            <ul>
-                <li><strong>p⃗ = m·v⃗</strong> — импульс тела.</li>
-                <li><strong>E = m·v² / 2</strong> — кинетическая энергия.</li>
-                <li>Сохранение импульса: <strong>Σp⃗<sub>до</sub> = Σp⃗<sub>после</sub></strong>.</li>
-            </ul>
-        </section>
+        <div class="checkboxes">
+            <label><input type="checkbox" id="trails" checked> Следы</label>
+            <label><input type="checkbox" id="particles" checked> Частицы</label>
+            <label><input type="checkbox" id="sound" checked> Звук</label>
+        </div>
+
+        <button class="btn" id="startPause">Пауза</button>
+        <button class="btn btn-reset" id="reset">Сброс</button>
+
+        <div class="hint">Хватай шары мышкой • Vx > 0 → вправо • Vy > 0 → вниз</div>
     </div>
-
-    <section class="simulation-area">
-        <h3>Область симуляции</h3>
-        <p>После добавления JavaScript здесь появится визуализация движения двух тел на бесконечной плоскости. Предусмотрены режим «кинематический компас» и «ручной вектор»: пользователь сможет либо вводить угол, либо перетаскивать стрелку на экране. Масштаб наблюдения автоматически адаптируется, чтобы шарики не исчезали при больших скоростях.</p>
-        <canvas id="collision-2d-canvas" class="simulation-canvas" width="900" height="450" aria-label="Симуляция 2D-столкновений тел"></canvas>
-        <div class="visual-hint">На сцене будет отображаться точка столкновения, векторы импульса до и после удара, а также трассировка траекторий с постепенным затуханием.</div>
-    </section>
-
-    <section class="controls">
-        <h3>Параметры модели</h3>
-        <form class="controls-form" aria-label="Настройки столкновения">
-            <fieldset>
-                <legend>Характеристики тел</legend>
-                <div class="option-grid two-columns">
-                    <div class="parameter-control">
-                        <label for="collision-mass-a">Масса тела A (кг)</label>
-                        <input type="range" id="collision-mass-a" name="mass_a" min="1" max="10" step="0.5" value="3">
-                        <output id="collision-mass-a-value" for="collision-mass-a">3.0</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="collision-radius-a">Радиус тела A (см)</label>
-                        <input type="range" id="collision-radius-a" name="radius_a" min="5" max="25" step="1" value="15">
-                        <output id="collision-radius-a-value" for="collision-radius-a">15</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="collision-mass-b">Масса тела B (кг)</label>
-                        <input type="range" id="collision-mass-b" name="mass_b" min="1" max="10" step="0.5" value="2">
-                        <output id="collision-mass-b-value" for="collision-mass-b">2.0</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="collision-radius-b">Радиус тела B (см)</label>
-                        <input type="range" id="collision-radius-b" name="radius_b" min="5" max="25" step="1" value="12">
-                        <output id="collision-radius-b-value" for="collision-radius-b">12</output>
-                    </div>
-                </div>
-            </fieldset>
-
-            <fieldset>
-                <legend>Начальные условия</legend>
-                <div class="radio-grid" role="radiogroup" aria-label="Режим задания направления">
-                    <label>
-                        <input type="radio" name="direction_mode" value="angle" checked>
-                        Ввод углов (°)
-                    </label>
-                    <label>
-                        <input type="radio" name="direction_mode" value="drag">
-                        Направление перетягиванием стрелки
-                    </label>
-                </div>
-                <div class="option-grid two-columns">
-                    <div class="parameter-control">
-                        <label for="collision-speed-a">Скорость A (м/с)</label>
-                        <input type="range" id="collision-speed-a" name="speed_a" min="0" max="15" step="0.5" value="5">
-                        <output id="collision-speed-a-value" for="collision-speed-a">5.0</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="collision-angle-a">Направление A (°)</label>
-                        <input type="range" id="collision-angle-a" name="angle_a" min="0" max="360" step="5" value="0">
-                        <output id="collision-angle-a-value" for="collision-angle-a">0</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="collision-speed-b">Скорость B (м/с)</label>
-                        <input type="range" id="collision-speed-b" name="speed_b" min="0" max="15" step="0.5" value="4">
-                        <output id="collision-speed-b-value" for="collision-speed-b">4.0</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="collision-angle-b">Направление B (°)</label>
-                        <input type="range" id="collision-angle-b" name="angle_b" min="0" max="360" step="5" value="45">
-                        <output id="collision-angle-b-value" for="collision-angle-b">45</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="collision-offset-x">Смещение центра B по оси X (м)</label>
-                        <input type="range" id="collision-offset-x" name="offset_x" min="-5" max="5" step="0.5" value="1.5">
-                        <output id="collision-offset-x-value" for="collision-offset-x">1.5</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="collision-offset-y">Смещение центра B по оси Y (м)</label>
-                        <input type="range" id="collision-offset-y" name="offset_y" min="-5" max="5" step="0.5" value="0">
-                        <output id="collision-offset-y-value" for="collision-offset-y">0</output>
-                    </div>
-                </div>
-                <div class="parameter-control">
-                    <label for="collision-restitution">Коэффициент восстановления</label>
-                    <input type="range" id="collision-restitution" name="restitution" min="0" max="1" step="0.05" value="0.9">
-                    <output id="collision-restitution-value" for="collision-restitution">0.90</output>
-                </div>
-                <div class="checkbox-grid" role="group" aria-label="Дополнительные опции">
-                    <label>
-                        <input type="checkbox" id="collision-show-impulse" name="show_impulse" checked>
-                        Показывать векторы импульса
-                    </label>
-                    <label>
-                        <input type="checkbox" id="collision-show-energy" name="show_energy" checked>
-                        Строить график энергии системы
-                    </label>
-                    <label>
-                        <input type="checkbox" id="collision-auto-zoom" name="auto_zoom" checked>
-                        Автомасштаб сцены при больших скоростях
-                    </label>
-                </div>
-            </fieldset>
-        </form>
-        <div class="control-actions">
-            <button type="button" class="action-btn" id="collision-start">Запуск симуляции</button>
-            <button type="button" class="action-btn" id="collision-reset">Сброс параметров</button>
-        </div>
-        <p class="controls-hint">Кнопки будут активны после реализации логики на JavaScript.</p>
-    </section>
-
-    <section class="info-card">
-        <h3>Ход исследования</h3>
-        <ol>
-            <li>Настройте массы объектов и задайте направление скорости второго тела.</li>
-            <li>Сравните импульс системы до столкновения и после него.</li>
-            <li>Смоделируйте неупругое взаимодействие, уменьшая коэффициент восстановления (будет добавлен в JavaScript), и отметьте потери энергии.</li>
-            <li>Опишите качественно изменение траекторий при разных углах подхода.</li>
-        </ol>
-    </section>
-
-    <section class="info-card">
-        <h3>Методические комментарии</h3>
-        <ul>
-            <li>Подчеркните важность разложения векторов по осям для анализа 2D-столкновений.</li>
-            <li>Рекомендуется построить диаграмму импульсов в виде многоугольника.</li>
-            <li>В качестве расширения можно предложить сравнить упругое и абсолютно неупругое столкновение.</li>
-        </ul>
-    </section>
-
-    <section class="info-card">
-        <h3>План визуализации</h3>
-        <div class="chip-list">
-            <div class="chip">Режим «прицеливания» с перетягиваемой стрелкой</div>
-            <div class="chip">Отображение области столкновения с сеткой относительных скоростей</div>
-            <div class="chip">История положений тел в последние 5 секунд</div>
-        </div>
-        <p class="note">HTML и CSS уже включают нужные элементы; JavaScript добавит обработчики переключения режимов, а также автоматическое перемещение камеры за телами.</p>
-    </section>
-
-    <button class="back-btn" onclick="window.location.href='index.html'">← Вернуться к списку экспериментов</button>
 </div>
 
-<footer>
-    <p>© 2025 Симуляция физических экспериментов</p>
-    <a href="https://study.physics.itmo.ru/" class="atom-link" target="_blank" rel="noopener">
-        <img src="img/atom.jpg" alt="Атом" title="Перейти на сайт study.physics.itmo.ru">
-    </a>
-</footer>
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let isRunning = true;
+
+    // Размеры игрового поля в метрах
+    const TABLE = { w: 16, h: 9 };
+    let PPM = 0; // пикселей на метр — будет пересчитываться
+
+    function resize() {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        PPM = Math.min(canvas.width / TABLE.w, canvas.height / TABLE.h) * 0.88;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const ballA = { x: 3, y: 4.5, vx: 8, vy: 0, radius: 0.4, mass: 10, color: '#ef4444', trail: [] };
+    const ballB = { x: 13, y: 4.5, vx: 0, vy: 0, radius: 0.6, mass: 30, color: '#3b82f6', trail: [] };
+
+    let particles = [];
+    let dragging = null;
+
+    // Ползунки
+    const controls = {
+        massA: document.getElementById('massA'),
+        radiusA: document.getElementById('radiusA'),
+        vxA: document.getElementById('vxA'),
+        vyA: document.getElementById('vyA'),
+        massB: document.getElementById('massB'),
+        radiusB: document.getElementById('radiusB'),
+        vxB: document.getElementById('vxB'),
+        vyB: document.getElementById('vyB'),
+        restitution: document.getElementById('restitution')
+    };
+
+    const outputs = {
+        massA: document.getElementById('massA-val'),
+        radiusA: document.getElementById('radiusA-val'),
+        vxA: document.getElementById('vxA-val'),
+        vyA: document.getElementById('vyA-val'),
+        massB: document.getElementById('massB-val'),
+        radiusB: document.getElementById('radiusB-val'),
+        vxB: document.getElementById('vxB-val'),
+        vyB: document.getElementById('vyB-val'),
+        restitution: document.getElementById('restitution-val')
+    };
+
+    function updateOutput(id, value) {
+        const el = outputs[id];
+        if (!el) return;
+        if (id === 'restitution') el.textContent = (+value).toFixed(2);
+        else if (id.includes('v')) el.textContent = (+value).toFixed(1);
+        else el.textContent = value;
+    }
+
+    Object.keys(controls).forEach(key => {
+        const slider = controls[key];
+        const out = outputs[key];
+        if (slider && out) {
+            updateOutput(key, slider.value);
+            slider.addEventListener('input', () => {
+                updateOutput(key, slider.value);
+                applyParameters();
+            });
+        }
+    });
+
+    function applyParameters() {
+        ballA.mass = +controls.massA.value;
+        ballA.radius = +controls.radiusA.value / 100;
+        ballA.vx = +controls.vxA.value;
+        ballA.vy = +controls.vyA.value;
+
+        ballB.mass = +controls.massB.value;
+        ballB.radius = +controls.radiusB.value / 100;
+        ballB.vx = +controls.vxB.value;
+        ballB.vy = +controls.vyB.value;
+    }
+
+    // Кнопки
+    document.getElementById('reset').onclick = () => {
+        ballA.x = 3; ballA.y = 4.5; ballA.trail = [];
+        ballB.x = 13; ballB.y = 4.5; ballB.trail = [];
+        particles = [];
+        applyParameters();
+    };
+
+    const btn = document.getElementById('startPause');
+    btn.onclick = () => {
+        isRunning = !isRunning;
+        btn.textContent = isRunning ? 'Пауза' : 'Старт';
+        btn.classList.toggle('pause', !isRunning);
+    };
+
+    // Перетаскивание
+    canvas.addEventListener('mousedown', e => {
+        if (!isRunning) return;
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) / canvas.width * TABLE.w;
+        const my = (e.clientY - rect.top) / canvas.height * TABLE.h;
+
+        if (Math.hypot(ballA.x - mx, ballA.y - my) < ballA.radius + 0.5) dragging = ballA;
+        else if (Math.hypot(ballB.x - mx, ballB.y - my) < ballB.radius + 0.5) dragging = ballB;
+    });
+
+    canvas.addEventListener('mousemove', e => {
+        if (!dragging || !isRunning) return;
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) / canvas.width * TABLE.w;
+        const my = (e.clientY - rect.top) / canvas.height * TABLE.h;
+
+        const dx = mx - dragging.x;
+        const dy = my - dragging.y;
+        const power = Math.min(Math.hypot(dx, dy) * 40, 60);
+        const angle = Math.atan2(dy, dx);
+        dragging.vx = power * Math.cos(angle);
+        dragging.vy = power * Math.sin(angle);
+
+        if (dragging === ballA) {
+            controls.vxA.value = dragging.vx;
+            controls.vyA.value = dragging.vy;
+            outputs.vxA.textContent = dragging.vx.toFixed(1);
+            outputs.vyA.textContent = dragging.vy.toFixed(1);
+        } else {
+            controls.vxB.value = dragging.vx;
+            controls.vyB.value = dragging.vy;
+            outputs.vxB.textContent = dragging.vx.toFixed(1);
+            outputs.vyB.textContent = dragging.vy.toFixed(1);
+        }
+    });
+
+    canvas.addEventListener('mouseup', () => dragging = null);
+    canvas.addEventListener('mouseleave', () => dragging = null);
+
+    // === РИСУЕМ ОСИ ПРАВИЛЬНО ===
+    function drawAxes() {
+        ctx.save();
+        ctx.strokeStyle = '#60a5fa';
+        ctx.fillStyle = '#93c5fd';
+        ctx.lineWidth = 2;
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const offsetX = 50;
+        const offsetY = 50;
+        const maxX = canvas.width - offsetX;
+        const maxY = canvas.height - offsetY;
+
+        // Ось X
+        ctx.beginPath();
+        ctx.moveTo(offsetX, canvas.height / 2);
+        ctx.lineTo(maxX, canvas.height / 2);
+        ctx.stroke();
+
+        // Стрелка X
+        ctx.beginPath();
+        ctx.moveTo(maxX, canvas.height / 2);
+        ctx.lineTo(maxX - 15, canvas.height / 2 - 8);
+        ctx.lineTo(maxX - 15, canvas.height / 2 + 8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillText('X', maxX + 25, canvas.height / 2);
+
+        // Деления X
+        for (let i = 0; i <= 16; i += 2) {
+            const x = offsetX + (i / 16) * (canvas.width - 2*offsetX);
+            ctx.beginPath();
+            ctx.moveTo(x, canvas.height/2 - 10);
+            ctx.lineTo(x, canvas.height/2 + 10);
+            ctx.stroke();
+            if (i > 0) ctx.fillText(i, x, canvas.height/2 + 25);
+        }
+
+        // Ось Y (вверх!)
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, canvas.height - offsetY);
+        ctx.lineTo(canvas.width / 2, offsetY);
+        ctx.stroke();
+
+        // Стрелка Y
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, offsetY);
+        ctx.lineTo(canvas.width/2 - 8, offsetY + 15);
+        ctx.lineTo(canvas.width/2 + 8, offsetY + 15);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillText('Y', canvas.width/2 + 30, offsetY - 10);
+
+        // Деления Y
+        for (let i = 0; i <= 9; i += 1) {
+            const y = canvas.height - offsetY - (i / 9) * (canvas.height - 2*offsetY);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width/2 - 10, y);
+            ctx.lineTo(canvas.width/2 + 10, y);
+            ctx.stroke();
+            if (i > 0) ctx.fillText((9-i).toString(), canvas.width/2 - 30, y);
+        }
+
+        // Ноль
+        ctx.fillStyle = '#60a5fa';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'top';
+        ctx.fillText('0', canvas.width/2 - 15, canvas.height/2 + 10);
+
+        ctx.restore();
+    }
+
+    // Физика и рендер
+    function update() {
+        if (!isRunning) {
+            render();
+            requestAnimationFrame(update);
+            return;
+        }
+
+        const dt = 1/60;
+        const e = +controls.restitution.value;
+
+        [ballA, ballB].forEach(b => {
+            b.x += b.vx * dt;
+            b.y += b.vy * dt;
+            b.vx *= 0.996;
+            b.vy *= 0.996;
+
+            if (b.x - b.radius < 0 || b.x + b.radius > TABLE.w) {
+                b.vx = -b.vx * 0.94;
+                b.x = Math.max(b.radius, Math.min(TABLE.w - b.radius, b.x));
+            }
+            if (b.y - b.radius < 0 || b.y + b.radius > TABLE.h) {
+                b.vy = -b.vy * 0.94;
+                b.y = Math.max(b.radius, Math.min(TABLE.h - b.radius, b.y));
+            }
+
+            if (document.getElementById('trails').checked) {
+                b.trail.push({x: b.x, y: b.y});
+                if (b.trail.length > 120) b.trail.shift();
+            }
+        });
+
+        // столкновение шаров — всё как раньше
+        const dx = ballB.x - ballA.x;
+        const dy = ballB.y - ballA.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < ballA.radius + ballB.radius && dist > 0.001) {
+            const nx = dx / dist, ny = dy / dist;
+            const va_n = ballA.vx*nx + ballA.vy*ny;
+            const vb_n = ballB.vx*nx + ballB.vy*ny;
+            const va_t_x = ballA.vx - va_n*nx;
+            const va_t_y = ballA.vy - va_n*ny;
+            const vb_t_x = ballB.vx - vb_n*nx;
+            const vb_t_y = ballB.vy - vb_n*ny;
+
+            const m1 = ballA.mass, m2 = ballB.mass;
+            const va_n2 = (va_n*(m1-m2) + 2*m2*vb_n)/(m1+m2) * e;
+            const vb_n2 = (vb_n*(m2-m1) + 2*m1*va_n)/(m1+m2) * e;
+
+            ballA.vx = va_t_x + va_n2*nx;
+            ballA.vy = va_t_y + va_n2*ny;
+            ballB.vx = vb_t_x + vb_n2*nx;
+            ballB.vy = vb_t_y + vb_n2*ny;
+
+            const overlap = ballA.radius + ballB.radius - dist + 0.005;
+            ballA.x -= overlap*nx*0.5;
+            ballA.y -= overlap*ny*0.5;
+            ballB.x += overlap*nx*0.5;
+            ballB.y += overlap*ny*0.5;
+
+            if (document.getElementById('particles').checked) createParticles((ballA.x+ballB.x)/2, (ballA.y+ballB.y)/2);
+            if (document.getElementById('sound').checked) playSound();
+        }
+
+        particles = particles.filter(p => p.life > 0);
+        particles.forEach(p => { p.x += p.vx*dt; p.y += p.vy*dt; p.life -= 0.03; });
+    }
+
+    function createParticles(x,y) {
+        for(let i=0;i<30;i++){
+            const a=Math.random()*Math.PI*2;
+            const s=3+Math.random()*7;
+            particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:0.9,color:'#fbbf24'});
+        }
+    }
+
+    function playSound() {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.frequency.setValueAtTime(180, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.08);
+        g.gain.setValueAtTime(0.3, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(); o.stop(ctx.currentTime + 0.2);
+    }
+
+    function render() {
+        ctx.fillStyle = '#0a0e1a';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+        ctx.strokeStyle = '#1e40af';
+        ctx.lineWidth = 20;
+        ctx.strokeRect(10,10,canvas.width-20,canvas.height-20);
+
+        // Оси
+        drawAxes();
+
+        // Следы
+        if (document.getElementById('trails').checked) {
+            [ballA, ballB].forEach(b => {
+                if (b.trail.length > 1) {
+                    ctx.strokeStyle = b.color + '99';
+                    ctx.lineWidth = 6;
+                    ctx.beginPath();
+                    b.trail.forEach((p,i) => {
+                        const x = (p.x / TABLE.w) * canvas.width;
+                        const y = (p.y / TABLE.h) * canvas.height;
+                        i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+                    });
+                    ctx.globalAlpha = 0.6; ctx.stroke(); ctx.globalAlpha = 1;
+                }
+            });
+        }
+
+        // Частицы
+        particles.forEach(p => {
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            const x = (p.x / TABLE.w) * canvas.width;
+            const y = (p.y / TABLE.h) * canvas.height;
+            ctx.fillRect(x-4,y-4,8,8);
+        });
+        ctx.globalAlpha = 1;
+
+        // Шары — теперь точно видны!
+        [ballA, ballB].forEach(b => {
+            const x = (b.x / TABLE.w) * canvas.width;
+            const y = (b.y / TABLE.h) * canvas.height;
+            const r = b.radius * PPM;
+
+            // тень
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.beginPath(); ctx.arc(x+8,y+8,r,0,Math.PI*2); ctx.fill();
+
+            // градиент
+            const grad = ctx.createRadialGradient(x-r*0.3,y-r*0.3,0,x,y,r);
+            grad.addColorStop(0,'#ffffff');
+            grad.addColorStop(0.4,b.color);
+            grad.addColorStop(1,'#000000');
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+
+            // блик
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.beginPath(); ctx.arc(x-r*0.4,y-r*0.4,r*0.3,0,Math.PI*2); ctx.fill();
+        });
+    }
+
+    function loop() {
+        update();
+        render();
+        requestAnimationFrame(loop);
+    }
+
+    applyParameters();
+    requestAnimationFrame(loop);
+</script>
 </body>
 </html>
-
