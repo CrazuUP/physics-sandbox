@@ -272,15 +272,20 @@
         } else if (isBound) {
             // Эллипс
             a = -mu / (2 * eps);
-            rp = a * (1 - e);
+            rp = Math.max(0, a * (1 - e)); // Защита от отрицательных значений
             ra = a * (1 + e);
             T = TWO_PI * Math.sqrt(a*a*a / mu);
         } else {
             // Гипербола/парабола
-            rp = p / (1 + e);
+            rp = Math.max(0, p / (1 + e)); // Защита от отрицательных значений
             ra = Infinity;
             a = NaN;
             T = Infinity;
+        }
+        
+        // Дополнительная проверка: rp должен быть положительным
+        if (rp <= 0 || !isFinite(rp)) {
+            rp = r; // Используем текущее расстояние как fallback
         }
         
         const periAngle = Math.atan2(ey, ex);
@@ -811,8 +816,9 @@
         }
         
         // Перигей
-        if (!oe.isCircular) {
-            const periVal = Math.round((oe.rp - state.R_planet)/1000);
+        if (!oe.isCircular && oe.rp > 0) {
+            const heightKm = (oe.rp - state.R_planet) / 1000;
+            const periVal = Math.max(0, Math.round(heightKm)); // Высота не может быть отрицательной
             drawInfoBlock('ПЕРИГЕЙ', periVal.toString(), '#00ff44');
         }
         
