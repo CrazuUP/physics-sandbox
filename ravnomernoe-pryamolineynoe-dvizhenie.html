@@ -3,75 +3,726 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Равномерное прямолинейное движение | Симуляция физических экспериментов</title>
-    <link rel="stylesheet" href="css/experiment-styles.css">
+    <title>Равномерное и равноускоренное движение</title>
+    <style>
+        /* ==================== ВАШИ СТИЛИ (experiment-styles.css) ==================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
+        body { background-color: white; color: #003366; line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* Header */
+        header { background-color: #003366; color: white; padding: 20px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; padding-left: 20px; padding-right: 20px;}
+        header h1 { font-size: 1.8rem; margin: 0; }
+        .header-content { text-align: left; }
+        .creators { font-size: 0.8rem; opacity: 0.8; margin-top: 4px;}
+
+        /* Кнопка "На главную" в шапке (адаптированная под стиль) */
+        .home-btn {
+            background-color: white;
+            color: #003366;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .home-btn:hover { background-color: #e6f2ff; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; flex: 1; width: 100%; }
+
+        /* Breadcrumbs */
+        .breadcrumb { font-size: 0.9rem; margin-bottom: 20px; }
+        .breadcrumb a { color: #0066cc; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb span { color: #4d5f73; margin-left: 8px; }
+
+        /* Intro */
+        .intro { background-color: #f8fbff; border-left: 4px solid #0066cc; border-radius: 10px; padding: 20px 24px; box-shadow: 0 4px 12px rgba(0, 51, 102, 0.08); margin-bottom: 25px; }
+        h2 { text-align: left; margin-bottom: 10px; font-size: 1.5rem; color: #003366; }
+
+        /* Simulation Area */
+        .simulation-area { background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+        canvas { border: 1px solid #ccc; background: white; display: block; margin: 0 auto; max-width: 100%; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .visual-hint { margin-top: 12px; font-size: 1rem; color: #335c85; font-family: monospace; font-weight: bold;}
+
+        /* Grid layout */
+        .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; align-items: flex-start; }
+        @media (max-width: 900px) { .content-grid { grid-template-columns: 1fr; } }
+
+        /* Cards */
+        .info-card { background-color: #f2f7ff; border: 1px solid #d8e6ff; border-radius: 10px; padding: 20px; box-shadow: 0 4px 12px rgba(0, 51, 102, 0.08); }
+        .info-card h3 { margin-bottom: 15px; color: #003366; border-bottom: 1px solid #d8e6ff; padding-bottom: 8px;}
+
+        /* Controls */
+        .controls-form { display: flex; flex-direction: column; gap: 12px; }
+
+        .parameter-control { margin: 5px 0; display: flex; flex-direction: column; }
+        .parameter-control label { font-weight: bold; margin-bottom: 5px; font-size: 0.9rem;}
+        .parameter-control select { padding: 8px; border: 1px solid #0066cc; border-radius: 4px; font-size: 1rem; background: white; color: #003366; cursor: pointer;}
+
+        .range-wrapper { display: flex; align-items: center; gap: 10px; }
+        .parameter-control input[type="range"] { flex: 1; height: 6px; background: #c6daff; border-radius: 3px; -webkit-appearance: none; }
+        .parameter-control input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: #0066cc; border-radius: 50%; cursor: pointer; transition: transform 0.1s;}
+        .parameter-control input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.1); }
+        .parameter-control output { min-width: 60px; text-align: right; font-weight: bold; color: #003366; font-family: monospace; font-size: 1.1rem; }
+
+        .checkbox-group { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 15px; }
+        .checkbox-group label { font-weight: normal; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; cursor: pointer;}
+
+        /* Buttons */
+        .controls-actions { margin-top: 20px; display: flex; gap: 10px; }
+        .action-btn { flex: 1; background-color: #0066cc; color: white; border: none; padding: 10px 16px; font-size: 1rem; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease; white-space: nowrap;}
+        .action-btn:hover { background-color: #004d99; }
+        .action-btn.secondary { background-color: #e6f2ff; color: #003366; border: 1px solid #0066cc; }
+        .action-btn.secondary:hover { background-color: #d1e6ff; }
+
+        .speed-controls { display: flex; justify-content: center; gap: 5px; margin-top: 15px; align-items: center;}
+        .speed-btn { background: white; border: 1px solid #ccc; color: #666; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;}
+        .speed-btn.active { background: #0066cc; color: white; border-color: #0066cc; }
+
+        /* Footer */
+        footer { background-color: #003366; color: white; text-align: center; padding: 20px 0; margin-top: auto; }
+    </style>
 </head>
 <body>
+
 <header>
-    <h1>Равномерное прямолинейное движение</h1>
-    <div class="creators">Создатели: Ипантьев Иван, Гончаров Максим, Ахроров Кароматуллохон</div>
+    <div class="header-content">
+        <h1>Движение тела по прямой</h1>
+        <div class="creators">Симуляция физических экспериментов</div>
+    </div>
+    <a href="index.html" class="home-btn">← На главную</a>
 </header>
 
 <div class="container">
-    <nav class="breadcrumb" aria-label="Хлебные крошки">
+    <nav class="breadcrumb">
         <a href="index.html">Главная</a>
-        <span>Равномерное прямолинейное движение</span>
+        <span>&gt;</span>
+        <span>Механика</span>
+        <span>&gt;</span>
+        <span>Кинематика точки</span>
     </nav>
 
     <section class="intro">
-        <h2>Краткое описание</h2>
-        <p>Эксперимент демонстрирует движение материальной точки по прямой при различных кинематических режимах: равномерном, равнозамедленном и равнопеременном. Пользователь управляет начальной координатой, скоростью и (опционально) постоянным ускорением.</p>
+        <h2>Описание эксперимента</h2>
+        <p>Исследуйте различные виды прямолинейного движения. Выберите режим (равномерное, ускоренное) или задайте параметры вручную. Наблюдайте за изменением координаты и скорости, а также за эффектом упругого удара о границы.</p>
     </section>
 
     <section class="simulation-area">
-        <h3>Визуализация движения</h3>
-        <canvas id="motion-canvas" width="800" height="150"></canvas>
-        <p class="visual-hint">Текущее положение: $x = <output id="motion-x-value">0.00</output>$ м | $v = <output id="motion-v-value">0.00</output>$ м/с | $t = <output id="motion-t-value">0.00</output>$ с</p>
+        <canvas id="sim-canvas" height="200"></canvas>
+        <div class="speed-controls">
+            <span>Скорость симуляции:</span>
+            <button class="speed-btn active" data-speed="1">1x</button>
+            <button class="speed-btn" data-speed="2">2x</button>
+            <button class="speed-btn" data-speed="5">5x</button>
+        </div>
+        <div class="visual-hint">
+            x = <span id="txt-x">0.00</span> м | v = <span id="txt-v">0.00</span> м/с | a = <span id="txt-a">0.00</span> м/с²
+        </div>
     </section>
 
     <div class="content-grid">
-        <section class="info-card controls-form">
+        <div class="info-card">
             <h3>Параметры движения</h3>
+            <div class="controls-form">
 
-            <label for="motion-x0">Начальная координата $x_0$ (м):</label>
-            <input type="range" id="motion-x0" min="-10" max="10" step="0.5" value="0">
-            <output id="motion-x0-value">0</output>
+                <div class="parameter-control">
+                    <label for="inp-mode">Режим движения:</label>
+                    <select id="inp-mode">
+                        <option value="uniform" selected>Равномерное</option>
+                        <option value="accelerated">Равноускоренное</option>
+                        <option value="decelerated">Равнозамедленное</option>
+                        <option value="custom">Пользовательский</option>
+                    </select>
+                </div>
 
-            <label for="motion-v0">Начальная скорость $v_0$ (м/с):</label>
-            <input type="range" id="motion-v0" min="-5" max="5" step="0.2" value="1">
-            <output id="motion-v0-value">1</output>
+                <div class="parameter-control">
+                    <label>Начальная координата</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="inp-pos" min="0" max="20" step="0.1" value="2">
+                        <output id="val-pos">2.0</output>
+                    </div>
+                </div>
 
-            <label for="motion-a">Ускорение $a$ (м/с²):</label>
-            <input type="range" id="motion-a" min="-2" max="2" step="0.1" value="0">
-            <output id="motion-a-value">0</output>
+                <div class="parameter-control">
+                    <label>Начальная скорость</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="inp-vel" min="-20" max="20" step="0.5" value="5">
+                        <output id="val-vel">5.0</output>
+                    </div>
+                </div>
 
-            <label for="motion-length">Длина пути наблюдения (м):</label>
-            <input type="range" id="motion-length" min="5" max="30" step="1" value="20">
-            <output id="motion-length-value">20</output>
+                <div class="parameter-control">
+                    <label>Ускорение</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="inp-acc" min="-5" max="5" step="0.1" value="0">
+                        <output id="val-acc">0.0</output>
+                    </div>
+                </div>
 
-            <div class="controls-actions">
-                <button id="start-simulation">Запуск симуляции</button>
-                <button id="reset-simulation">Сброс</button>
+                <div class="parameter-control">
+                    <label>Длина пути</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="inp-length" min="5" max="50" step="1" value="20">
+                        <output id="val-length">20</output>
+                    </div>
+                </div>
+
+                <div class="parameter-control">
+                    <label>Упругость удара</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="inp-elasticity" min="0.1" max="1.0" step="0.05" value="0.9">
+                        <output id="val-elasticity">0.9</output>
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="chk-trails" checked> След</label>
+                    <label><input type="checkbox" id="chk-vectors" checked> Вектор скорости</label>
+                    <label><input type="checkbox" id="chk-particles" checked> Эффект удара</label>
+                </div>
+
+                <div class="controls-actions">
+                    <button id="btn-play-pause" class="action-btn">Старт</button>
+                    <button id="btn-reset" class="action-btn secondary">Сброс</button>
+                </div>
             </div>
-        </section>
+        </div>
 
-        <section class="info-card">
-            <h3>Цели эксперимента</h3>
-            <ol>
-                <li>Установить зависимость между параметрами $x_0$, $v_0$, $a$ и характером движения.</li>
-                <li>Научиться определять тип движения по графику координата-время.</li>
-            </ol>
-        </section>
+        <div class="info-card">
+            <h3>Теоретическая справка</h3>
 
+            <!-- Красивая карточка с основными уравнениями -->
+            <div class="theory-formula">
+                <div class="formula-header">
+                    <span class="formula-title">Основное уравнение движения</span>
+                    <span class="formula-desc">Координата в любой момент времени</span>
+                </div>
+                <div class="formula-body">
+                    <div class="formula-display">
+                        <span class="formula-large">x(t) = x₀ + v₀t + <span class="fraction">at²</span><span class="fraction-denominator">2</span></span>
+                    </div>
+                    <div class="formula-legend">
+                        <div class="legend-item">
+                            <span class="symbol">x₀</span>
+                            <span class="explanation">— начальная координата (м)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="symbol">v₀</span>
+                            <span class="explanation">— начальная скорость (м/с)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="symbol">a</span>
+                            <span class="explanation">— ускорение (м/с²)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="symbol">t</span>
+                            <span class="explanation">— время (с)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вторая карточка с уравнением скорости -->
+            <div class="theory-formula secondary">
+                <div class="formula-header">
+                    <span class="formula-title">Скорость тела</span>
+                    <span class="formula-desc">Изменение скорости со временем</span>
+                </div>
+                <div class="formula-body">
+                    <div class="formula-display">
+                        <span class="formula-large">v(t) = v₀ + at</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Важные замечания в виде карточек -->
+            <div class="theory-notes">
+                <div class="note-card">
+                    <div class="note-icon"></div>
+                    <div class="note-content">
+                        <h4>Равномерное движение</h4>
+                        <p>При <strong>равномерном</strong> движении ускорение <span class="math-inline">a = 0</span>, поэтому уравнения упрощаются:</p>
+                        <div class="simplified-formula">
+                            x(t) = x₀ + v₀t<br>
+                            v(t) = v₀ (постоянна)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="note-card">
+                    <div class="note-icon"></div>
+                    <div class="note-content">
+                        <h4>Упругий удар о стенку</h4>
+                        <p>При ударе о границу скорость меняется по формуле:</p>
+                        <div class="simplified-formula">
+                            v' = -k·v
+                        </div>
+                        <p>где <span class="math-inline">k</span> — коэффициент упругости (0 ≤ k ≤ 1)</p>
+                        <ul class="impact-list">
+                            <li><span class="k-value k-perfect">k = 1.0</span> — абсолютно упругий удар</li>
+                            <li><span class="k-value k-high">k = 0.8-0.9</span> — высокий возврат энергии</li>
+                            <li><span class="k-value k-low">k < 0.5</span> — значительные потери</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="note-card">
+                    <div class="note-icon"></div>
+                    <div class="note-content">
+                        <h4>Особые случаи</h4>
+                        <div class="special-cases">
+                            <div class="case-item">
+                                <div class="case-name">Равнозамедленное</div>
+                                <div class="case-desc">a < 0, v уменьшается</div>
+                            </div>
+                            <div class="case-item">
+                                <div class="case-name">Равноускоренное</div>
+                                <div class="case-desc">a > 0, v увеличивается</div>
+                            </div>
+                            <div class="case-item">
+                                <div class="case-name">Покоящееся</div>
+                                <div class="case-desc">v₀ = 0, a = 0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Дополнительная информация -->
+            <div class="theory-hint">
+                <div class="hint-icon"></div>
+                <div class="hint-text">
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <footer>
     <p>© 2025 Симуляция физических экспериментов</p>
-    <a href="https://study.physics.itmo.ru/" class="atom-link" target="_blank" rel="noopener">
-        <img src="img/atom.jpg" alt="Атом" title="Перейти на сайт study.physics.itmo.ru">
-    </a>
 </footer>
+
+<script>
+    /* ====================== JS: Logic (Adapted for Light Theme) ====================== */
+    const canvas = document.getElementById('sim-canvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+
+    // === КОНФИГУРАЦИЯ РЕЖИМОВ ===
+    const MODES = {
+        uniform:     { a: 0, v: 5, x: 2 },
+        accelerated: { a: 1.5, v: 0, x: 2 },
+        decelerated: { a: -0.8, v: 8, x: 2 },
+        custom:      { a: null, v: null, x: null }
+    };
+
+    const state = {
+        length: 20, elasticity: 0.90, speedMultiplier: 1,
+        x: 2.0, v: 5.0, a: 0.0,
+        mass: 10, radiusCm: 40, color: '#ef4444', // Red ball
+        running: false, dragging: false, mode: 'uniform',
+        trails: [], particles: [],
+        showTrails: true, showVectors: true, showParticles: true
+    };
+
+    const MAX_TRAIL_LENGTH = 300;
+    const PHYSICS_DT = 1 / 240;
+
+    // UI Cache
+    const ui = {
+        playBtn: document.getElementById('btn-play-pause'),
+        modeSelect: document.getElementById('inp-mode'),
+        textX: document.getElementById('txt-x'),
+        textV: document.getElementById('txt-v'),
+        textA: document.getElementById('txt-a'),
+        inputs: {
+            x: document.getElementById('inp-pos'),
+            v: document.getElementById('inp-vel'),
+            a: document.getElementById('inp-acc'),
+            L: document.getElementById('inp-length'),
+            k: document.getElementById('inp-elasticity')
+        },
+        displays: {
+            x: document.getElementById('val-pos'),
+            v: document.getElementById('val-vel'),
+            a: document.getElementById('val-acc'),
+            L: document.getElementById('val-length'),
+            k: document.getElementById('val-elasticity')
+        }
+    };
+
+    // ====================== Physics ======================
+    function updatePhysics(dt) {
+        let effectiveDt = dt * state.speedMultiplier;
+        if (effectiveDt > 0.1) effectiveDt = 0.1;
+
+        // Kinematics
+        state.v += state.a * effectiveDt;
+        state.x += state.v * effectiveDt;
+
+        // Collision logic
+        const rM = state.radiusCm / 100;
+
+        // Right wall
+        if (state.x + rM > state.length) {
+            const overshoot = (state.x + rM) - state.length;
+            state.x = state.length - rM - overshoot;
+            if (state.v > 0) {
+                const impactV = state.v;
+                state.v = -state.v * state.elasticity;
+                spawnParticles(state.length, true, impactV);
+            }
+        }
+        // Left wall
+        if (state.x - rM < 0) {
+            const overshoot = rM - state.x;
+            state.x = rM + overshoot;
+            if (state.v < 0) {
+                const impactV = state.v;
+                state.v = -state.v * state.elasticity;
+                spawnParticles(0, false, impactV);
+            }
+        }
+
+        // Trail
+        if (state.showTrails && state.running && Math.abs(state.v) > 0.05) {
+            state.trails.push({ x: state.x, t: Date.now() });
+            if (state.trails.length > MAX_TRAIL_LENGTH) state.trails.shift();
+        }
+    }
+
+    function spawnParticles(xPosM, isRightWall, impactVel) {
+        if (!state.showParticles) return;
+        const count = Math.min(15, Math.floor(Math.abs(impactVel) * 1.5));
+        for(let i=0; i<count; i++) {
+            state.particles.push({
+                x: xPosM, y: 0,
+                vx: (Math.random() * 4 + 1) * (isRightWall ? -1 : 1),
+                vy: (Math.random() - 0.5) * 6 - 2,
+                life: 1.0, color: '#003366' // Dark blue particles for light theme
+            });
+        }
+    }
+
+    function updateParticles(dt) {
+        for (let i = state.particles.length - 1; i >= 0; i--) {
+            const p = state.particles[i];
+            p.life -= dt * 2;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt * 0.5;
+            if (p.life <= 0) state.particles.splice(i, 1);
+        }
+    }
+
+    // ====================== Rendering (LIGHT THEME ADAPTATION) ======================
+    function getScale() {
+        const padding = 60;
+        return (canvas.width - padding * 2) / state.length;
+    }
+
+    function worldToScreen(xM) {
+        return 60 + xM * getScale();
+    }
+
+    function screenToWorld(sX) {
+        return (sX - 60) / getScale();
+    }
+
+    function draw() {
+        const W = canvas.width;
+        const H = canvas.height;
+        const centerY = H / 2;
+        const ppm = getScale();
+
+        // 1. Clear to White (Style requirement)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, H);
+
+        // 2. Coordinate Line (Blue from style)
+        ctx.beginPath();
+        ctx.moveTo(60, centerY);
+        ctx.lineTo(W - 60, centerY);
+        ctx.strokeStyle = '#003366';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 3. Ticks & Labels
+        ctx.textAlign = 'center';
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#4d5f73'; // Muted blue-gray text
+
+        let tickStep = state.length > 25 ? 5 : (state.length > 10 ? 2 : 1);
+        for (let m = 0; m <= state.length; m += tickStep) {
+            const sx = worldToScreen(m);
+            ctx.beginPath();
+            ctx.moveTo(sx, centerY - 6);
+            ctx.lineTo(sx, centerY + 6);
+            ctx.strokeStyle = '#0066cc';
+            ctx.stroke();
+            ctx.fillText(m, sx, centerY + 25);
+        }
+
+        // 4. Walls
+        const wallHeight = 50;
+        ctx.fillStyle = '#c6daff'; // Light blue walls
+        ctx.fillRect(worldToScreen(0)-4, centerY-wallHeight/2, 4, wallHeight);
+        ctx.fillRect(worldToScreen(state.length), centerY-wallHeight/2, 4, wallHeight);
+
+        // 5. Trails
+        if (state.showTrails && state.trails.length > 1) {
+            ctx.lineWidth = 3;
+            for (let i = 0; i < state.trails.length - 1; i++) {
+                const t1 = state.trails[i];
+                const t2 = state.trails[i+1];
+                const age = Date.now() - t1.t;
+                const opacity = Math.max(0, 1 - age / 1500);
+                if (opacity > 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(worldToScreen(t1.x), centerY);
+                    ctx.lineTo(worldToScreen(t2.x), centerY);
+                    ctx.strokeStyle = `rgba(200, 0, 0, ${opacity * 0.5})`; // Semi-transparent red
+                    ctx.stroke();
+                }
+            }
+            if (state.trails.length > 0 && Date.now() - state.trails[0].t > 1500) state.trails.shift();
+        }
+
+        // 6. Particles
+        state.particles.forEach(p => {
+            const sx = worldToScreen(p.x);
+            const sy = centerY + p.y * ppm;
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 2, 0, Math.PI*2);
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        });
+
+        // 7. Body (Ball)
+        const bx = worldToScreen(state.x);
+        const rPx = (state.radiusCm / 100) * ppm;
+
+        // Gradient for 3D look
+        const grad = ctx.createRadialGradient(bx - rPx*0.3, centerY - rPx*0.3, rPx*0.1, bx, centerY, rPx);
+        grad.addColorStop(0, '#ff9999');
+        grad.addColorStop(1, '#cc0000'); // Standard Red
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(bx, centerY, rPx, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Shadow underneath
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.beginPath();
+        ctx.ellipse(bx, centerY + rPx + 2, rPx, rPx*0.3, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        // 8. Velocity Vector
+        if (state.showVectors && Math.abs(state.v) > 0.1) {
+            const vecScale = 15;
+            const vxPx = state.v * vecScale;
+
+            ctx.strokeStyle = '#0066cc'; // Blue arrow
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(bx, centerY - rPx - 10);
+            ctx.lineTo(bx + vxPx, centerY - rPx - 10);
+            ctx.stroke();
+
+            // Arrow head
+            const headSz = 5;
+            const tipX = bx + vxPx;
+            const tipY = centerY - rPx - 10;
+            ctx.fillStyle = '#0066cc';
+            ctx.beginPath();
+            if (state.v > 0) {
+                ctx.moveTo(tipX, tipY);
+                ctx.lineTo(tipX - headSz, tipY - headSz / 2);
+                ctx.lineTo(tipX - headSz, tipY + headSz / 2);
+            } else {
+                ctx.moveTo(tipX, tipY);
+                ctx.lineTo(tipX + headSz, tipY - headSz / 2);
+                ctx.lineTo(tipX + headSz, tipY + headSz / 2);
+            }
+            ctx.fill();
+        }
+
+        // Live Text Update
+        ui.textX.textContent = state.x.toFixed(2);
+        ui.textV.textContent = state.v.toFixed(2);
+        ui.textA.textContent = state.a.toFixed(2);
+    }
+
+    // ====================== Loop & Events ======================
+    let lastTime = 0;
+    let accumTime = 0;
+
+    function loop(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        let frameTime = (timestamp - lastTime) / 1000;
+        lastTime = timestamp;
+
+        if (state.running && !state.dragging) {
+            accumTime += frameTime * state.speedMultiplier;
+            while (accumTime >= PHYSICS_DT) {
+                updatePhysics(PHYSICS_DT);
+                accumTime -= PHYSICS_DT;
+            }
+        }
+        updateParticles(frameTime);
+        draw();
+
+        if (!state.dragging) {
+            ui.inputs.x.value = state.x;
+            ui.displays.x.textContent = state.x.toFixed(2);
+            ui.inputs.v.value = state.v;
+            ui.displays.v.textContent = state.v.toFixed(2);
+            // Don't auto-update acceleration slider to allow manual override
+        }
+
+        requestAnimationFrame(loop);
+    }
+
+    function resize() {
+        // Adjust canvas to container width
+        const container = document.querySelector('.simulation-area');
+        canvas.width = container.clientWidth - 40; // padding
+        draw();
+    }
+    window.addEventListener('resize', resize);
+
+    // ====================== Interaction ======================
+
+    function updateStateFromInputs() {
+        ui.inputs.x.value = state.x; ui.displays.x.textContent = state.x.toFixed(2);
+        ui.inputs.v.value = state.v; ui.displays.v.textContent = state.v.toFixed(2);
+        ui.inputs.a.value = state.a; ui.displays.a.textContent = state.a.toFixed(2);
+    }
+
+    // Mode Selector Logic
+    ui.modeSelect.addEventListener('change', (e) => {
+        const mode = e.target.value;
+        state.mode = mode;
+        if (MODES[mode] && mode !== 'custom') {
+            state.a = MODES[mode].a;
+            state.v = MODES[mode].v;
+            state.x = MODES[mode].x;
+            state.trails = [];
+            state.running = false;
+            ui.playBtn.textContent = "Старт";
+            updateStateFromInputs();
+            draw();
+        }
+    });
+
+    // Inputs Binding
+    function bindInput(key, stateKey) {
+        ui.inputs[key].addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            state[stateKey] = val;
+            ui.displays[key].textContent = val.toFixed(key === 'L' ? 0 : (key === 'k' ? 2 : 1));
+
+            // If dragging sliders that affect motion physics, switch to custom
+            if (['x', 'v', 'a'].includes(key)) {
+                ui.modeSelect.value = 'custom';
+                if(key === 'x') state.trails = [];
+            }
+            if (key === 'L') {
+                const rM = state.radiusCm / 100;
+                if (state.x > state.length - rM) state.x = state.length - rM;
+            }
+            draw();
+        });
+    }
+
+    bindInput('x', 'x');
+    bindInput('v', 'v');
+    bindInput('a', 'a');
+    bindInput('L', 'length');
+    bindInput('k', 'elasticity');
+
+    // Controls
+    ui.playBtn.onclick = () => {
+        state.running = !state.running;
+        ui.playBtn.textContent = state.running ? "Пауза" : "Старт";
+    };
+
+    document.getElementById('btn-reset').onclick = () => {
+        state.running = false;
+        ui.playBtn.textContent = "Старт";
+        const mode = state.mode !== 'custom' ? state.mode : 'uniform';
+        ui.modeSelect.value = mode;
+        // Reset to mode defaults
+        if(MODES[mode]) {
+            state.x = MODES[mode].x;
+            state.v = MODES[mode].v;
+            state.a = MODES[mode].a;
+        } else {
+            state.x = 2; state.v = 5; state.a = 0;
+        }
+        state.trails = [];
+        state.particles = [];
+        updateStateFromInputs();
+        draw();
+    };
+
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.speedMultiplier = parseFloat(btn.dataset.speed);
+        };
+    });
+
+    document.getElementById('chk-trails').onchange = e => state.showTrails = e.target.checked;
+    document.getElementById('chk-vectors').onchange = e => state.showVectors = e.target.checked;
+    document.getElementById('chk-particles').onchange = e => state.showParticles = e.target.checked;
+
+    // Mouse Dragging (Simple hit detection)
+    function getMousePos(evt) {
+        const rect = canvas.getBoundingClientRect();
+        return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+        const m = getMousePos(e);
+        const bx = 60 + state.x * getScale(); // Manual calculation to avoid closure issue
+        const by = canvas.height / 2;
+        if (Math.abs(m.x - bx) < 30 && Math.abs(m.y - by) < 30) {
+            state.dragging = true;
+            state.running = false;
+            ui.playBtn.textContent = "Старт";
+            canvas.style.cursor = 'grabbing';
+        }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!state.dragging) return;
+        const m = getMousePos(e);
+        const rM = state.radiusCm / 100;
+        let newX = (m.x - 60) / getScale();
+        newX = Math.max(rM, Math.min(state.length - rM, newX));
+
+        state.x = newX;
+        state.v = 0;
+        state.trails = [];
+        ui.modeSelect.value = 'custom';
+        updateStateFromInputs();
+        draw();
+    });
+
+    window.addEventListener('mouseup', () => {
+        state.dragging = false;
+        canvas.style.cursor = 'default';
+    });
+
+    // Start
+    resize();
+    updateStateFromInputs();
+    requestAnimationFrame(loop);
+
+</script>
 </body>
-<script src="js/uniform-motion.js"></script>
 </html>

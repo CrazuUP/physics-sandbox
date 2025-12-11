@@ -57,10 +57,15 @@
     const outBalanceStatus = document.getElementById('lever-balance-status');
 
     const inpM1 = document.getElementById('lever-m1');
+    const outM1 = document.getElementById('lever-m1-value');
     const inpPos1 = document.getElementById('lever-pos1');
+    const outPos1 = document.getElementById('lever-pos1-value');
     const inpM2 = document.getElementById('lever-m2');
+    const outM2 = document.getElementById('lever-m2-value');
     const inpPos2 = document.getElementById('lever-pos2');
+    const outPos2 = document.getElementById('lever-pos2-value');
     const inpFulcrum = document.getElementById('lever-fulcrum-pos');
+    const outFulcrum = document.getElementById('lever-fulcrum-pos-value');
 
     const btnCheck = document.getElementById('lever-start');
     const btnReset = document.getElementById('lever-reset');
@@ -91,7 +96,7 @@
         weightsPanel.id = 'weights-panel';
         weightsPanel.style.marginTop = '12px';
         weightsPanel.innerHTML = `
-      <h3>Управление грузами</h3>
+      <h3>Управление дополнительными грузами</h3>
       <div id="weights-controls" style="display:flex;gap:12px;flex-wrap:wrap;">
         <button id="add-weight-btn" class="action-btn">Добавить груз</button>
         <button id="toggle-sim-btn" class="action-btn">Пуск/Пауза динамики</button>
@@ -323,19 +328,22 @@
        UI: управление грузами (динамическая панель)
        =========================== */
     function createWeightRow(L) {
-        // row: color dot, m input, x input, remove button
+        // row: color dot, mass slider + output, position slider + output, remove button
         const row = document.createElement('div');
         row.id = 'weight-row-' + L.id;
+        row.className = 'parameter-control';
         row.style.display = 'flex';
         row.style.alignItems = 'center';
         row.style.gap = '8px';
-        row.style.marginBottom = '8px';
+        row.style.marginBottom = '12px';
         row.innerHTML = `
       <div style="width:12px;height:12px;background:${L.color};border-radius:50%;"></div>
-      <label style="width:46px">m (кг)</label>
-      <input type="number" id="w-m-${L.id}" value="${L.mass}" min="0.1" step="0.1" style="width:90px"/>
-      <label style="width:46px">x (м)</label>
-      <input type="number" id="w-x-${L.id}" value="${L.x.toFixed(2)}" min="${METER_MIN}" max="${METER_MAX}" step="0.01" style="width:90px"/>
+      <label for="w-m-${L.id}" style="width:140px">Масса (кг)</label>
+      <input type="range" id="w-m-${L.id}" value="${L.mass}" min="0.5" max="30" step="0.5" style="width:200px"/>
+      <output id="w-m-val-${L.id}" for="w-m-${L.id}">${L.mass.toFixed(1)}</output>
+      <label for="w-x-${L.id}" style="width:140px">Позиция (м)</label>
+      <input type="range" id="w-x-${L.id}" value="${L.x}" min="${METER_MIN}" max="${METER_MAX}" step="0.1" style="width:200px"/>
+      <output id="w-x-val-${L.id}" for="w-x-${L.id}">${L.x.toFixed(1)}</output>
       <button id="w-remove-${L.id}" class="action-btn" style="padding:4px 8px">Удалить</button>
     `;
         return row;
@@ -345,16 +353,22 @@
         // Перестроить список контролов (просто пересоздаём)
         weightsListNode.innerHTML = '';
         for (const L of model.loads) {
+            if (L.id <= 2) continue; // пропустить первые два, для них есть фиксированные ползунки
             const row = createWeightRow(L);
             weightsListNode.appendChild(row);
             // hook inputs
             const mInp = document.getElementById('w-m-' + L.id);
+            const mOut = document.getElementById('w-m-val-' + L.id);
             const xInp = document.getElementById('w-x-' + L.id);
+            const xOut = document.getElementById('w-x-val-' + L.id);
             const rmBtn = document.getElementById('w-remove-' + L.id);
             if (mInp) {
                 mInp.addEventListener('input', (e) => {
                     const v = parseFloat(e.target.value);
-                    if (!Number.isNaN(v) && v > 0) L.mass = v;
+                    if (!Number.isNaN(v) && v > 0) {
+                        L.mass = v;
+                        if (mOut) mOut.textContent = v.toFixed(1);
+                    }
                     updateOutputs();
                     drawScene();
                 });
@@ -365,6 +379,7 @@
                     if (Number.isNaN(v)) return;
                     v = Math.max(METER_MIN, Math.min(METER_MAX, v));
                     L.x = v;
+                    if (xOut) xOut.textContent = v.toFixed(1);
                     updateOutputs();
                     drawScene();
                 });
@@ -382,10 +397,11 @@
     if (addWeightBtn) {
         addWeightBtn.addEventListener('click', () => {
             // добавляем груз рядом с опорой (если возможно)
-            const pos = Math.max(METER_MIN, Math.min(METER_MAX, model.fulcrum + 1));
-            model.addLoad(1.0, pos, LOAD_COLORS[(model.nextId-1) % LOAD_COLORS.length]);
-            // запомним состояния
-            drawScene(true);
+            const pos = Math.max(METER_MIN, Math.min(METER_MAX, model.fulcrum + Math.random() * 2 - 1));
+            model.addLoad(5, pos);
+            updateWeightControls();
+            updateOutputs();
+            drawScene();
         });
     }
 
@@ -394,133 +410,73 @@
         toggleSimBtn.textContent = 'Пауза динамики';
         toggleSimBtn.addEventListener('click', () => {
             dynamicsRunning = !dynamicsRunning;
-            toggleSimBtn.textContent = dynamicsRunning ? 'Пауза динамики' : 'Возобновить динамику';
-            if (dynamicsRunning) lastTime = performance.now(), raf();
+            toggleSimBtn.textContent = dynamicsRunning ? 'Пауза динамики' : 'Пуск динамики';
+            if (dynamicsRunning) raf();
         });
     }
-
     if (restoreBalanceBtn) {
         restoreBalanceBtn.addEventListener('click', () => {
             model.restoreBalance();
-            // синхронизируем UI inputs для первого двух грузов, если они существуют
-            for (const L of model.loads) {
-                const xi = document.getElementById('w-x-' + L.id);
-                const mi = document.getElementById('w-m-' + L.id);
-                if (xi) xi.value = L.x.toFixed(2);
-                if (mi) mi.value = L.mass;
-            }
-            drawScene(true);
+            updateWeightControls();
+            updateOutputs();
+            drawScene();
         });
     }
-
     if (resetSimBtn) {
         resetSimBtn.addEventListener('click', () => {
-            // вернём начальное равновесие
             initBalancedStartingState();
             updateWeightControls();
-            model.theta = 0; model.omega = 0;
+            updateOutputs();
+            drawScene();
             graphData.length = 0;
-            drawScene(true);
             drawGraph();
         });
     }
 
-    if (btnCheck) {
-        btnCheck.addEventListener('click', () => {
-            // показать статус равновесия (обновление полей уже делает updateOutputs)
-            updateOutputs();
-            drawScene(true);
-        });
-    }
-    if (btnReset) {
-        btnReset.addEventListener('click', () => {
-            resetSimBtn.click();
-        });
-    }
-
     /* ===========================
-       Pointer interaction: drag loads and fulcrum
+       Обновление числовых полей
        =========================== */
-    let dragging = null; // {type: 'load'|'fulcrum', id}
-    function findHitTarget(clientX, clientY) {
-        const rect = canvas.getBoundingClientRect();
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
-        const { w, h } = getCanvasSize(canvas);
-        const beamY = h * 0.45;
-        // check loads
-        for (const L of model.loads) {
-            const px = metersToPx(L.x);
-            const py = beamY + 28;
-            const d = Math.hypot(px - x, py - y);
-            if (d <= Math.max(18, L.radius + 4)) return {type: 'load', id: L.id};
+    function updateOutputs() {
+        const M = model.computeTotalMoment();
+        if (outMomentNet) outMomentNet.value = M.toFixed(2);
+        if (outMechanicalWin) {
+            const K = model.computeMechanicalAdvantage();
+            outMechanicalWin.value = Number.isFinite(K) ? K.toFixed(3) : '∞';
         }
-        // check fulcrum
-        const fulPx = metersToPx(model.fulcrum);
-        const dF = Math.hypot(fulPx - x, beamY - y);
-        if (dF <= 28) return {type: 'fulcrum'};
-        return null;
-    }
-
-    canvas.addEventListener('pointerdown', (ev) => {
-        canvas.setPointerCapture(ev.pointerId);
-        const hit = findHitTarget(ev.clientX, ev.clientY);
-        if (hit) {
-            dragging = hit;
-            // stop dynamics while dragging for accuracy
-            model.omega = 0;
-            dynamicsRunning = false;
-            if (toggleSimBtn) toggleSimBtn.textContent = 'Возобновить динамику';
-            drawScene();
+        if (outRequiredForce) {
+            // приближённая оценка требуемой силы слева для компенсации правой
+            let rightMoment = 0;
+            let leftArmSum = 0, leftCount = 0;
+            for (const L of model.loads) {
+                const r = L.x - model.fulcrum;
+                if (r > 0) rightMoment += L.mass * G * r;
+                if (r < 0) { leftArmSum += Math.abs(r); leftCount++; }
+            }
+            const avgLeft = leftCount > 0 ? leftArmSum / leftCount : 0;
+            const req = (avgLeft > 1e-6) ? (rightMoment / avgLeft) : 0;
+            outRequiredForce.value = req > 0 ? req.toFixed(2) : '0.00';
         }
-    });
-
-    canvas.addEventListener('pointermove', (ev) => {
-        if (!dragging) return;
-        const rect = canvas.getBoundingClientRect();
-        const x = ev.clientX - rect.left;
-        const m = pxToMeters(x);
-        const clamped = Math.max(METER_MIN, Math.min(METER_MAX, +m.toFixed(2)));
-        if (dragging.type === 'fulcrum') {
-            model.fulcrum = clamped;
-            if (inpFulcrum) inpFulcrum.value = model.fulcrum;
-        } else if (dragging.type === 'load') {
-            const L = model.loads.find(z => z.id === dragging.id);
-            if (L) {
-                L.x = clamped;
-                const xInp = document.getElementById('w-x-' + L.id);
-                if (xInp) xInp.value = L.x.toFixed(2);
+        if (outBalanceStatus) {
+            if (model.isBalanced(0.05)) {
+                outBalanceStatus.textContent = 'РАВНОВЕСИЕ';
+                outBalanceStatus.style.color = '#0a7a2f';
+            } else {
+                const s = model.computeTotalMoment() > 0 ? 'ПОВОРОТ ПРОТИВ ЧАСОВОЙ' : 'ПОВОРОТ ПО ЧАСОВОЙ';
+                outBalanceStatus.textContent = s;
+                outBalanceStatus.style.color = '#d9534f';
             }
         }
-        updateOutputs();
-        drawScene();
-    });
-
-    canvas.addEventListener('pointerup', (ev) => {
-        if (dragging) {
-            dragging = null;
-            // resume dynamics
-            dynamicsRunning = true;
-            if (toggleSimBtn) toggleSimBtn.textContent = 'Пауза динамики';
-            // ensure update UI
-            updateWeightControls();
-            updateOutputs();
-            drawScene();
-            lastTime = performance.now();
-            raf();
+        // update legacy outputs
+        if (model.loads[0]) {
+            if (outM1) outM1.textContent = model.loads[0].mass.toFixed(1);
+            if (outPos1) outPos1.textContent = model.loads[0].x.toFixed(1);
         }
-        try { canvas.releasePointerCapture(ev.pointerId); } catch (e) {}
-    });
-
-    canvas.addEventListener('pointercancel', () => {
-        dragging = null;
-    });
-
-    canvas.addEventListener('dblclick', () => {
-        // сбросить угол
-        model.theta = 0; model.omega = 0;
-        drawScene(true);
-    });
+        if (model.loads[1]) {
+            if (outM2) outM2.textContent = model.loads[1].mass.toFixed(1);
+            if (outPos2) outPos2.textContent = model.loads[1].x.toFixed(1);
+        }
+        if (outFulcrum) outFulcrum.textContent = model.fulcrum.toFixed(1);
+    }
 
     /* ===========================
        Рисование сцены (балка, опора, грузы, подписи)
@@ -679,41 +635,6 @@
     }
 
     /* ===========================
-       Обновление числовых полей
-       =========================== */
-    function updateOutputs() {
-        const M = model.computeTotalMoment();
-        if (outMomentNet) outMomentNet.value = M.toFixed(2);
-        if (outMechanicalWin) {
-            const K = model.computeMechanicalAdvantage();
-            outMechanicalWin.value = Number.isFinite(K) ? K.toFixed(3) : '∞';
-        }
-        if (outRequiredForce) {
-            // приближённая оценка требуемой силы слева для компенсации правой
-            let rightMoment = 0;
-            let leftArmSum = 0, leftCount = 0;
-            for (const L of model.loads) {
-                const r = L.x - model.fulcrum;
-                if (r > 0) rightMoment += L.mass * G * r;
-                if (r < 0) { leftArmSum += Math.abs(r); leftCount++; }
-            }
-            const avgLeft = leftCount > 0 ? leftArmSum / leftCount : 0;
-            const req = (avgLeft > 1e-6) ? (rightMoment / avgLeft) : 0;
-            outRequiredForce.value = req > 0 ? req.toFixed(2) : '0.00';
-        }
-        if (outBalanceStatus) {
-            if (model.isBalanced(0.05)) {
-                outBalanceStatus.textContent = 'РАВНОВЕСИЕ';
-                outBalanceStatus.style.color = '#0a7a2f';
-            } else {
-                const s = model.computeTotalMoment() > 0 ? 'ПОВОРОТ ПРОТИВ ЧАСОВОЙ' : 'ПОВОРОТ ПО ЧАСОВОЙ';
-                outBalanceStatus.textContent = s;
-                outBalanceStatus.style.color = '#d9534f';
-            }
-        }
-    }
-
-    /* ===========================
        График ΣM(t)
        =========================== */
     const graphData = []; // {t: ms, M: N·m}
@@ -828,6 +749,98 @@
     rafId = requestAnimationFrame(raf);
 
     /* ===========================
+       Перетаскивание грузов и опоры
+       =========================== */
+    let dragging = null; // {type: 'load'|'fulcrum', id?: number}
+    canvas.addEventListener('pointerdown', (ev) => {
+        ev.preventDefault();
+        const { w, h, left: cLeft, top: cTop } = getCanvasSize(canvas);
+        const x = ev.clientX - cLeft;
+        const y = ev.clientY - cTop;
+        const fulPx = metersToPx(model.fulcrum);
+        const beamY = h * 0.45;
+        // check fulcrum
+        if (Math.abs(x - fulPx) < 28 && Math.abs(y - (beamY + 18)) < 36) {
+            dragging = {type: 'fulcrum'};
+            try { canvas.setPointerCapture(ev.pointerId); } catch (e) {}
+            dynamicsRunning = false; // pause while dragging
+            return;
+        }
+        // check loads
+        for (const L of model.loads) {
+            const px = metersToPx(L.x);
+            const dy = y - beamY;
+            const dx = x - px;
+            // approx check (including rope area)
+            if (Math.abs(dx) < L.radius && dy > -30 && dy < 24 + L.radius) {
+                dragging = {type: 'load', id: L.id};
+                try { canvas.setPointerCapture(ev.pointerId); } catch (e) {}
+                dynamicsRunning = false; // pause while dragging
+                return;
+            }
+        }
+    });
+
+    canvas.addEventListener('pointermove', (ev) => {
+        if (!dragging) return;
+        const { left: cLeft } = getCanvasSize(canvas);
+        const x = ev.clientX - cLeft;
+        const newPos = pxToMeters(x);
+        if (dragging.type === 'fulcrum') {
+            model.fulcrum = Math.max(METER_MIN + 0.1, Math.min(METER_MAX - 0.1, newPos));
+            // update legacy input if present
+            if (inpFulcrum) inpFulcrum.value = model.fulcrum;
+            if (outFulcrum) outFulcrum.textContent = model.fulcrum.toFixed(1);
+        } else if (dragging.type === 'load') {
+            const L = model.loads.find(s => s.id === dragging.id);
+            if (L) {
+                L.x = Math.max(METER_MIN, Math.min(METER_MAX, newPos));
+                // update UI input
+                if (L.id === 1) {
+                    if (inpPos1) inpPos1.value = L.x;
+                    if (outPos1) outPos1.textContent = L.x.toFixed(1);
+                } else if (L.id === 2) {
+                    if (inpPos2) inpPos2.value = L.x;
+                    if (outPos2) outPos2.textContent = L.x.toFixed(1);
+                } else {
+                    const xInp = document.getElementById('w-x-' + L.id);
+                    const xOut = document.getElementById('w-x-val-' + L.id);
+                    if (xInp) xInp.value = L.x;
+                    if (xOut) xOut.textContent = L.x.toFixed(1);
+                }
+            }
+        }
+        updateOutputs();
+        drawScene();
+    });
+
+    canvas.addEventListener('pointerup', (ev) => {
+        if (dragging) {
+            dragging = null;
+            // resume dynamics
+            dynamicsRunning = true;
+            if (toggleSimBtn) toggleSimBtn.textContent = 'Пауза динамики';
+            // ensure update UI
+            updateWeightControls();
+            updateOutputs();
+            drawScene();
+            lastTime = performance.now();
+            raf();
+        }
+        try { canvas.releasePointerCapture(ev.pointerId); } catch (e) {}
+    });
+
+    canvas.addEventListener('pointercancel', () => {
+        dragging = null;
+    });
+
+    canvas.addEventListener('dblclick', () => {
+        // сбросить угол
+        model.theta = 0; model.omega = 0;
+        drawScene(true);
+    });
+
+    /* ===========================
        Синхронизация со старой формой (если есть)
        =========================== */
     // если у пользователя были ползунки lever-m1 etc, синхронизируем с первыми двумя грузами
@@ -835,44 +848,48 @@
         inpM1.addEventListener('input', (e) => {
             if (model.loads[0]) {
                 model.loads[0].mass = parseFloat(e.target.value);
-                const mInp = document.getElementById('w-m-' + model.loads[0].id);
-                if (mInp) mInp.value = model.loads[0].mass;
+                if (outM1) outM1.textContent = model.loads[0].mass.toFixed(1);
             }
+            updateOutputs();
+            drawScene();
         });
     }
     if (inpPos1) {
         inpPos1.addEventListener('input', (e) => {
             if (model.loads[0]) {
                 model.loads[0].x = parseFloat(e.target.value);
-                const xInp = document.getElementById('w-x-' + model.loads[0].id);
-                if (xInp) xInp.value = model.loads[0].x;
-                updateOutputs(); drawScene();
+                if (outPos1) outPos1.textContent = model.loads[0].x.toFixed(1);
             }
+            updateOutputs();
+            drawScene();
         });
     }
     if (inpM2) {
         inpM2.addEventListener('input', (e) => {
             if (model.loads[1]) {
                 model.loads[1].mass = parseFloat(e.target.value);
-                const mInp = document.getElementById('w-m-' + model.loads[1].id);
-                if (mInp) mInp.value = model.loads[1].mass;
+                if (outM2) outM2.textContent = model.loads[1].mass.toFixed(1);
             }
+            updateOutputs();
+            drawScene();
         });
     }
     if (inpPos2) {
         inpPos2.addEventListener('input', (e) => {
             if (model.loads[1]) {
                 model.loads[1].x = parseFloat(e.target.value);
-                const xInp = document.getElementById('w-x-' + model.loads[1].id);
-                if (xInp) xInp.value = model.loads[1].x;
-                updateOutputs(); drawScene();
+                if (outPos2) outPos2.textContent = model.loads[1].x.toFixed(1);
             }
+            updateOutputs();
+            drawScene();
         });
     }
     if (inpFulcrum) {
         inpFulcrum.addEventListener('input', (e) => {
             model.fulcrum = parseFloat(e.target.value);
-            updateOutputs(); drawScene();
+            if (outFulcrum) outFulcrum.textContent = model.fulcrum.toFixed(1);
+            updateOutputs();
+            drawScene();
         });
     }
 
