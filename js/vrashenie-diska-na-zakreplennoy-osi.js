@@ -372,10 +372,10 @@
 
         // Информация о диске
         ctx.fillStyle = '#000';
-        ctx.font = 'bold 14px sans-serif';
+        ctx.font = 'bold 12px sans-serif';
         ctx.fillText('Диск', centerX - 20, y + 20);
         
-        ctx.font = '12px sans-serif';
+        ctx.font = '10px sans-serif';
         ctx.fillStyle = '#333';
         ctx.fillText(`θ = ${(state.theta * 180 / Math.PI).toFixed(1)}°`, x + 10, y + 20);
         ctx.fillText(`ω = ${state.omega.toFixed(2)} рад/с`, x + 10, y + 35);
@@ -387,18 +387,18 @@
         
         if (state.stopTime !== null) {
             ctx.fillStyle = '#ff0000';
-            ctx.font = 'bold 12px sans-serif';
+            ctx.font = 'bold 10px sans-serif';
             ctx.fillText(`Остановка: t = ${state.stopTime.toFixed(2)} с`, x + 10, y + 80);
         } else if (computeStopTimeCheckbox.checked && Math.abs(state.omega) < 0.5 && state.alpha < 0) {
             ctx.fillStyle = '#ff8800';
-            ctx.font = '12px sans-serif';
+            ctx.font = '10px sans-serif';
             ctx.fillText('Замедление...', x + 10, y + 80);
         }
         
         // Внешний момент
         if (Math.abs(state.torque) > 0.1) {
             ctx.fillStyle = state.torque > 0 ? '#00aa00' : '#aa0000';
-            ctx.font = '11px sans-serif';
+            ctx.font = '9px sans-serif';
             ctx.fillText(`τ = ${state.torque.toFixed(1)} Н·м`, x + w - 120, y + 20);
         }
     }
