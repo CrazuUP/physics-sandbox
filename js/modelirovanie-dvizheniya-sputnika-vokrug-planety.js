@@ -621,21 +621,23 @@
             ctx.setLineDash([5, 5]);
             ctx.lineWidth = 1;
             
-            // Перигей
-            const periX = cx + Math.cos(oe.periAngle) * oe.rp * scale;
-            const periY = cy - Math.sin(oe.periAngle) * oe.rp * scale;
-            ctx.strokeStyle = '#00ff00';
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.lineTo(periX, periY);
-            ctx.stroke();
-            
-            ctx.fillStyle = '#00ff00';
-            ctx.beginPath();
-            ctx.arc(periX, periY, 5, 0, TWO_PI);
-            ctx.fill();
-            ctx.font = 'bold 13px sans-serif';
-            ctx.fillText('Перигей', periX + 10, periY - 5);
+            // Перигей (показываем только если он выше поверхности планеты)
+            if (oe.rp >= state.R_planet) {
+                const periX = cx + Math.cos(oe.periAngle) * oe.rp * scale;
+                const periY = cy - Math.sin(oe.periAngle) * oe.rp * scale;
+                ctx.strokeStyle = '#00ff00';
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(periX, periY);
+                ctx.stroke();
+                
+                ctx.fillStyle = '#00ff00';
+                ctx.beginPath();
+                ctx.arc(periX, periY, 5, 0, TWO_PI);
+                ctx.fill();
+                ctx.font = 'bold 13px sans-serif';
+                ctx.fillText('Перигей', periX + 10, periY - 5);
+            }
             
             // Апогей (если замкнута)
             if (oe.isBound && oe.ra < Infinity) {
@@ -815,11 +817,14 @@
             drawInfoBlock('АПОГЕЙ', '∞', '#ff8800');
         }
         
-        // Перигей
-        if (!oe.isCircular && oe.rp > 0) {
+        // Перигей (показываем только если он выше поверхности планеты)
+        if (!oe.isCircular && oe.rp > 0 && oe.rp >= state.R_planet) {
             const heightKm = (oe.rp - state.R_planet) / 1000;
-            const periVal = Math.max(0, Math.round(heightKm)); // Высота не может быть отрицательной
+            const periVal = Math.round(heightKm);
             drawInfoBlock('ПЕРИГЕЙ', periVal.toString(), '#00ff44');
+        } else if (!oe.isCircular && oe.rp > 0 && oe.rp < state.R_planet) {
+            // Перигей внутри планеты - показываем предупреждение
+            drawInfoBlock('ПЕРИГЕЙ', 'СТОЛКНОВЕНИЕ', '#ff0000');
         }
         
         // Период
