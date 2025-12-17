@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -53,11 +52,37 @@
         <div class="visual-hint">Индикаторы на сцене покажут распределение энергий, а также подпишут момент остановки тележки.</div>
     </section>
 
+    <section class="info-card" style="margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">История экспериментов</h3>
+            <button id="toggle-history-btn" class="action-btn" style="padding: 5px 10px; font-size: 14px;">Показать историю экспериментов</button>
+        </div>
+
+        <div id="history-container" style="display: none;">
+            <p>Нажмите "Сброс", чтобы сохранить результат текущего опыта.</p>
+            <table class="data-table" id="history-table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                <tr style="background-color: #f2f2f2; text-align: left;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">#</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">m (кг)</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">v0 (м/с)</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">k (Н/м)</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Угол (°)</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Max сжатие (м)</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Max Ek (Дж)</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
     <section class="controls">
         <h3>Параметры модели</h3>
         <form class="controls-form" aria-label="Настройки столкновения тележки с пружиной">
             <fieldset>
-                <legend>Тележка</legend>
+                <legend>Тележка и Среда</legend>
                 <div class="option-grid two-columns">
                     <div class="parameter-control">
                         <label for="cart-mass">Масса тележки (кг)</label>
@@ -72,22 +97,22 @@
                         <output id="cart-speed-value" for="cart-speed">4.0</output>
                     </div>
                     <div class="parameter-control">
+                        <label for="track-angle">Угол наклона (°)</label>
+                        <input type="range" id="track-angle" name="track_angle" min="0" max="45" step="1" value="0">
+                        <input type="number" id="track-angle-number" min="0" max="45" step="1" value="0">
+                        <output id="track-angle-value" for="track-angle">0</output>
+                    </div>
+                    <div class="parameter-control">
                         <label for="cart-friction">Сопротивление движения</label>
                         <input type="range" id="cart-friction" name="cart_friction" min="0" max="1" step="0.01" value="0.02">
                         <input type="number" id="cart-friction-number" min="0" max="1" step="0.01" value="0.02">
                         <output id="cart-friction-value" for="cart-friction">0.02</output>
                     </div>
-                    <div class="parameter-control">
-                        <label for="cart-position">Начальное расстояние до пружины (м)</label>
-                        <input type="range" id="cart-position" name="cart_position" min="0" max="10" step="0.1" value="1.2">
-                        <input type="number" id="cart-position-number" min="0" max="10" step="0.1" value="1.2">
-                        <output id="cart-position-value" for="cart-position">1.2</output>
-                    </div>
                 </div>
             </fieldset>
 
             <fieldset>
-                <legend>Пружина и контакт</legend>
+                <legend>Пружина и Настройки</legend>
                 <div class="option-grid two-columns">
                     <div class="parameter-control">
                         <label for="spring-stiffness">Жёсткость пружины (Н/м)</label>
@@ -95,29 +120,36 @@
                         <input type="number" id="spring-stiffness-number" min="50" max="5000" step="10" value="200">
                         <output id="spring-stiffness-value" for="spring-stiffness">200</output>
                     </div>
+
                     <div class="parameter-control">
-                        <label for="spring-preload">Предварительное сжатие (см)</label>
-                        <input type="range" id="spring-preload" name="spring_preload" min="0" max="50" step="0.5" value="0">
-                        <input type="number" id="spring-preload-number" min="0" max="50" step="0.5" value="0">
-                        <output id="spring-preload-value" for="spring-preload">0</output>
+                        <label for="cart-position">Нач. расстояние (м)</label>
+                        <input type="range" id="cart-position" min="0.1" max="5" step="0.1" value="1.5">
+                        <input type="number" id="cart-position-number" min="0.1" max="5" step="0.1" value="1.5">
+                        <output id="cart-position-value">1.50</output>
                     </div>
+
                     <div class="parameter-control">
-                        <label for="cart-damping">Коэффициент потерь</label>
+                        <label for="spring-preload">Преднатяг пружины (см)</label>
+                        <input type="range" id="spring-preload" min="0" max="20" step="0.5" value="0">
+                        <input type="number" id="spring-preload-number" min="0" max="20" step="0.5" value="0">
+                        <output id="spring-preload-value">0.00</output>
+                    </div>
+
+                    <div class="parameter-control">
+                        <label for="cart-damping">Коэффициент потерь пружины</label>
                         <input type="range" id="cart-damping" name="damping" min="0" max="2" step="0.01" value="0.05">
                         <input type="number" id="cart-damping-number" min="0" max="2" step="0.01" value="0.05">
                         <output id="cart-damping-value" for="cart-damping">0.05</output>
-                    </div>
-                    <div class="parameter-control">
-                        <label for="contact-restitution">Коэффициент восстановления</label>
-                        <input type="range" id="contact-restitution" name="restitution" min="0" max="1" step="0.05" value="0.8">
-                        <input type="number" id="contact-restitution-number" min="0" max="1" step="0.05" value="0.8">
-                        <output id="contact-restitution-value" for="contact-restitution">0.80</output>
                     </div>
                 </div>
                 <div class="checkbox-grid" role="group" aria-label="Режимы контакта">
                     <label>
                         <input type="checkbox" id="contact-lock" name="contact_lock">
-                        Режим «залипания» (тележка остаётся прижатой)
+                        Режим «залипания»
+                    </label>
+                    <label style="color: #000036; font-weight: bold;">
+                        <input type="checkbox" id="slow-motion" name="slow_motion">
+                        Замедление (x0.1)
                     </label>
                     <label>
                         <input type="checkbox" id="contact-show-force" name="show_force" checked>
@@ -125,7 +157,7 @@
                     </label>
                     <label>
                         <input type="checkbox" id="contact-show-energy" name="show_energy" checked>
-                        Графики энергий (E<sub>k</sub>, E<sub>пруж</sub>)
+                        Графики энергий
                     </label>
                 </div>
             </fieldset>
@@ -134,19 +166,18 @@
             <button type="button" class="action-btn" id="cart-start">Запуск симуляции</button>
             <button type="button" class="action-btn" id="cart-reset">Сброс параметров</button>
             <button type="button" class="action-btn" id="stop-graphs">Остановить графики</button>
+            <button type="button" class="action-btn" id="export-data" style="background-color: #28a745;">Экспорт данных (CSV)</button>
+
+            <button type="button" class="action-btn" id="export-photo" style="background-color: #007bff;">Экспорт фото (PNG)</button>
+
         </div>
-        <p class="controls-hint">Теперь с отсчётом перед стартом для удобства просмотра.</p>
+
+
+
+        <p class="controls-hint">Наклон влияет на ускорение тележки под действием гравитации.</p>
     </section>
 
-    <section class="info-card">
-        <h3>Ход исследования</h3>
-        <ol>
-            <li>Настройте массу и скорость тележки, определите ожидаемое сжатие пружины без потерь.</li>
-            <li>Добавьте потери и сравните максимальное сжатие и амплитуду колебаний.</li>
-            <li>Оцените влияние жёсткости пружины на длительность взаимодействия.</li>
-            <li>Сделайте вывод о сохранении энергии в идеальных и реальных условиях.</li>
-        </ol>
-    </section>
+
 
 
 
