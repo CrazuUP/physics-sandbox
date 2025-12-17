@@ -932,13 +932,6 @@
         renderGraphs();
     }, 100);
     
-    // Авто-старт через 500мс
-    setTimeout(() => {
-        if (!state.running && buttons.start) {
-            state.running = true;
-            buttons.start.textContent = 'Пауза';
-            requestAnimationFrame(mainLoop);
-        }
-    }, 500);
+    // Автозапуск отключен - пользователь должен нажать кнопку "Запуск симуляции"
     
 })();
