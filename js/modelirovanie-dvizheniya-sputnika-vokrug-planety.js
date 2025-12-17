@@ -65,6 +65,20 @@
         reset: document.getElementById('orbit-reset')
     };
     
+    let downloadBtn = document.getElementById('orbit-download-csv');
+    
+    // Создаем кнопку скачивания, если её нет
+    if (!downloadBtn) {
+        downloadBtn = document.createElement('button');
+        downloadBtn.id = 'orbit-download-csv';
+        downloadBtn.type = 'button';
+        downloadBtn.className = 'action-btn';
+        downloadBtn.textContent = 'Скачать CSV';
+        if (buttons.reset && buttons.reset.parentNode) {
+            buttons.reset.parentNode.appendChild(downloadBtn);
+        }
+    }
+    
     // ========== СОСТОЯНИЕ ==========
     const state = {
         running: false,
@@ -138,6 +152,13 @@
             resetSimulation();
             render();
         });
+        
+        // Кнопка Скачать CSV
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => {
+                exportToCSV();
+            });
+        }
         
         // Изменение параметров при остановке
         Object.values(inputs).forEach(inp => {
@@ -441,15 +462,125 @@
         const rangeE = (maxE - minE) || 1;
         const rangeL = (maxL - minL) || 1;
         
-        // Оси
+        const tStart = state.graphData[0].t;
+        const tEnd = state.graphData[state.graphData.length-1].t;
+        const tRange = tEnd - tStart || 1;
+        
+        // Фон графика
         graphCtx.fillStyle = '#f5f5f5';
         graphCtx.fillRect(pad, pad, gw, gh);
         graphCtx.strokeStyle = '#999';
         graphCtx.strokeRect(pad, pad, gw, gh);
         
-        const tStart = state.graphData[0].t;
-        const tEnd = state.graphData[state.graphData.length-1].t;
-        const tRange = tEnd - tStart || 1;
+        // Сетка и деления
+        graphCtx.strokeStyle = '#ddd';
+        graphCtx.lineWidth = 1;
+        graphCtx.font = '10px sans-serif';
+        graphCtx.fillStyle = '#666';
+        graphCtx.textAlign = 'center';
+        graphCtx.textBaseline = 'top';
+        
+        // Вертикальные линии (время) - 10 делений
+        const numVerticalLines = 10;
+        for (let i = 0; i <= numVerticalLines; i++) {
+            const x = pad + (i / numVerticalLines) * gw;
+            const t = tStart + (i / numVerticalLines) * tRange;
+            
+            // Линия сетки
+            graphCtx.beginPath();
+            graphCtx.moveTo(x, pad);
+            graphCtx.lineTo(x, pad + gh);
+            graphCtx.stroke();
+            
+            // Подпись времени
+            if (i === 0 || i === numVerticalLines || i % 2 === 0) {
+                graphCtx.fillText(t.toFixed(1) + ' с', x, pad + gh + 5);
+            }
+        }
+        
+        // Горизонтальные линии для энергии (левая шкала) - 8 делений
+        const numHorizontalLines = 8;
+        graphCtx.strokeStyle = '#ddd';
+        graphCtx.fillStyle = '#007bff';
+        for (let i = 0; i <= numHorizontalLines; i++) {
+            const y = pad + gh - (i / numHorizontalLines) * gh;
+            const value = minE + (i / numHorizontalLines) * rangeE;
+            
+            // Линия сетки
+            graphCtx.beginPath();
+            graphCtx.moveTo(pad, y);
+            graphCtx.lineTo(pad + gw, y);
+            graphCtx.stroke();
+            
+            // Подпись энергии (слева) - показываем каждое второе деление
+            if (i === 0 || i === numHorizontalLines || i % 2 === 0) {
+                graphCtx.textAlign = 'right';
+                graphCtx.textBaseline = 'middle';
+                graphCtx.font = '9px monospace';
+                graphCtx.fillText(value.toExponential(2), pad - 8, y);
+            }
+        }
+        
+        // Подписи момента импульса (правая шкала) - используем те же горизонтальные линии
+        graphCtx.fillStyle = '#ff8800';
+        for (let i = 0; i <= numHorizontalLines; i++) {
+            const y = pad + gh - (i / numHorizontalLines) * gh;
+            const value = minL + (i / numHorizontalLines) * rangeL;
+            
+            // Подпись момента импульса (справа) - показываем каждое второе деление
+            if (i === 0 || i === numHorizontalLines || i % 2 === 0) {
+                graphCtx.textAlign = 'left';
+                graphCtx.textBaseline = 'middle';
+                graphCtx.font = '9px monospace';
+                graphCtx.fillText(value.toExponential(2), pad + gw + 8, y);
+            }
+        }
+        
+        // Оси
+        graphCtx.strokeStyle = '#333';
+        graphCtx.lineWidth = 2;
+        graphCtx.textAlign = 'center';
+        graphCtx.textBaseline = 'top';
+        
+        // Ось времени (снизу)
+        graphCtx.beginPath();
+        graphCtx.moveTo(pad, pad + gh);
+        graphCtx.lineTo(pad + gw, pad + gh);
+        graphCtx.stroke();
+        
+        // Подпись оси времени
+        graphCtx.fillStyle = '#333';
+        graphCtx.font = 'bold 12px sans-serif';
+        graphCtx.fillText('Время (с)', pad + gw/2, pad + gh + 25);
+        
+        // Ось энергии (слева)
+        graphCtx.beginPath();
+        graphCtx.moveTo(pad, pad);
+        graphCtx.lineTo(pad, pad + gh);
+        graphCtx.stroke();
+        
+        // Подпись оси энергии
+        graphCtx.save();
+        graphCtx.translate(15, pad + gh/2);
+        graphCtx.rotate(-Math.PI/2);
+        graphCtx.fillText('Энергия (Дж)', 0, 0);
+        graphCtx.restore();
+        
+        // Ось момента импульса (справа)
+        graphCtx.beginPath();
+        graphCtx.moveTo(pad + gw, pad);
+        graphCtx.lineTo(pad + gw, pad + gh);
+        graphCtx.stroke();
+        
+        // Подпись оси момента импульса
+        graphCtx.save();
+        graphCtx.translate(W - 15, pad + gh/2);
+        graphCtx.rotate(-Math.PI/2);
+        graphCtx.fillText('Момент импульса', 0, 0);
+        graphCtx.restore();
+        
+        graphCtx.textAlign = 'left';
+        graphCtx.textBaseline = 'alphabetic';
         
         // Energy (синий)
         graphCtx.beginPath();
@@ -909,6 +1040,56 @@
             const c = cnv.getContext('2d');
             c.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
+    }
+    
+    // ========== ЭКСПОРТ CSV ==========
+    function exportToCSV() {
+        if (state.graphData.length === 0) {
+            alert('Нет данных для экспорта. Запустите симуляцию и дождитесь накопления данных.');
+            return;
+        }
+
+        // Заголовки CSV
+        const headers = ['Время (с)', 'Энергия (Дж)', 'Момент импульса (кг·м²/с)'];
+        
+        // Параметры эксперимента
+        const params = [
+            `Параметры эксперимента:`,
+            `Масса планеты: ${(state.M / EARTH_MASS).toFixed(2)} × M_Земли`,
+            `Масса спутника: ${(state.m / MOON_MASS).toFixed(2)} × M_Луны`,
+            `Начальная высота: ${(parseFloat(inputs.radius.value))} тыс. км`,
+            `Начальная скорость: ${parseFloat(inputs.initialSpeed.value)} км/с`,
+            `Угол полета: ${parseFloat(inputs.flightAngle.value)}°`,
+            `Наклон орбиты: ${parseFloat(inputs.inclination.value)}°`,
+            `Сопротивление: ${state.drag}`,
+            `Импульс коррекции: ${parseFloat(inputs.thrust.value)} м/с`,
+            ``
+        ];
+
+        // Данные
+        const rows = state.graphData.map(point => [
+            point.t.toFixed(6),
+            point.E.toExponential(12),
+            point.L.toExponential(12)
+        ]);
+
+        // Объединяем все в CSV
+        const csvContent = [
+            ...params,
+            headers.join(','),
+            ...rows.map(row => row.join(','))
+        ].join('\n');
+
+        // Создаем и скачиваем файл
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `satellite_orbit_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
     
     // ========== СТАРТ ==========
