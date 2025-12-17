@@ -41,6 +41,19 @@
 
     const startBtn = document.getElementById('atwood-start');
     const resetBtn = document.getElementById('atwood-reset');
+    let downloadBtn = document.getElementById('atwood-download-csv');
+    
+    // Создаем кнопку скачивания, если её нет
+    if (!downloadBtn) {
+        downloadBtn = document.createElement('button');
+        downloadBtn.id = 'atwood-download-csv';
+        downloadBtn.type = 'button';
+        downloadBtn.className = 'action-btn';
+        downloadBtn.textContent = 'Скачать CSV';
+        if (resetBtn && resetBtn.parentNode) {
+            resetBtn.parentNode.appendChild(downloadBtn);
+        }
+    }
 
     // State
     const state = {
@@ -64,7 +77,12 @@
         limitPos: 2.5, 
         
         // Simulation status
-        isStatic: false
+        isStatic: false,
+        
+        // Data history for CSV export
+        history: [],
+        lastHistoryTime: 0,
+        historyInterval: 0.1 // записываем каждые 0.1 секунды
     };
 
     // Initialization
@@ -99,6 +117,12 @@
             resetToDefaults();
             resetSimulation();
         });
+        
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => {
+                exportToCSV();
+            });
+        }
 
         window.addEventListener('resize', () => {
             fitCanvas();
@@ -166,6 +190,8 @@
         state.vel = 0;
         state.acc = 0;
         state.isStatic = false;
+        state.history = [];
+        state.lastHistoryTime = 0;
         render();
     }
 
@@ -294,6 +320,23 @@
         }
 
         state.time += dt;
+        
+        // Записываем данные в историю для экспорта
+        if (state.time - state.lastHistoryTime >= state.historyInterval) {
+            state.history.push({
+                t: state.time,
+                pos: state.pos,
+                vel: state.vel,
+                acc: state.acc,
+                isStatic: state.isStatic
+            });
+            state.lastHistoryTime = state.time;
+            
+            // Ограничиваем размер истории (последние 10000 точек)
+            if (state.history.length > 10000) {
+                state.history.shift();
+            }
+        }
     }
 
     function loop(ts) {
@@ -587,19 +630,28 @@
         const blockH = 35;
         const blockW = 55;
         
-        // Позиция центра груза вдоль склона
+        // Позиция точки на поверхности склона (центр нижней грани груза)
         const baseAx = px - distA * scale * Math.cos(angA);
         const baseAy = py + distA * scale * Math.sin(angA);
         const baseBx = px + distB * scale * Math.cos(angB);
         const baseBy = py + distB * scale * Math.sin(angB);
         
-        // Смещение перпендикулярно склону вверх (чтобы груз был НА поверхности, а не внутри)
+        // Груз рисуется от y=-blockH до y=0 в локальных координатах
+        // После поворота на -angA, нижняя грань (y=0 в локальных координатах) должна лежать на поверхности
+        // Центр груза находится в (0, -blockH/2) в локальных координатах
+        // Чтобы нижняя грань (y=0) лежала на поверхности, центр должен быть смещен вверх
+        // по перпендикуляру к склону на расстояние blockH/2
         // Перпендикуляр к склону A (вверх): (-sin(angA), -cos(angA))
         // Перпендикуляр к склону B (вверх): (sin(angB), -cos(angB))
-        const offsetFromSurface = blockH * 0.5; // Половина высоты груза
+        // Добавляем небольшое дополнительное смещение для визуального контакта с поверхностью
+        const offsetFromSurface = blockH * 0.5 + 1;
         
+        // Позиция центра груза: смещаем от точки на поверхности вверх по перпендикуляру
+        // Для груза A: перпендикуляр вверх = (-sin(angA), -cos(angA))
         const posAx = baseAx - Math.sin(angA) * offsetFromSurface;
         const posAy = baseAy - Math.cos(angA) * offsetFromSurface;
+        
+        // Для груза B: перпендикуляр вверх = (sin(angB), -cos(angB))
         const posBx = baseBx + Math.sin(angB) * offsetFromSurface;
         const posBy = baseBy - Math.cos(angB) * offsetFromSurface;
         
@@ -666,12 +718,12 @@
         ctx.translate(posAx, posAy);
         ctx.rotate(-angA);
         
-        // Тень/контакт с поверхностью (под грузом)
+        // Тень/контакт с поверхностью (под грузом) - рисуем на поверхности (y=0)
         ctx.shadowColor = 'rgba(0,0,0,0.4)';
         ctx.shadowBlur = 8;
         ctx.shadowOffsetY = 3;
         ctx.fillStyle = 'rgba(0,0,0,0.25)';
-        ctx.fillRect(-blockW/2 + 2, 2, blockW - 4, 8);
+        ctx.fillRect(-blockW/2 + 2, 0, blockW - 4, 6);
         
         // Сброс тени для самого груза
         ctx.shadowColor = 'rgba(0,0,0,0.5)';
@@ -744,12 +796,12 @@
         ctx.translate(posBx, posBy);
         ctx.rotate(angB);
         
-        // Тень/контакт с поверхностью (под грузом)
+        // Тень/контакт с поверхностью (под грузом) - рисуем на поверхности (y=0)
         ctx.shadowColor = 'rgba(0,0,0,0.4)';
         ctx.shadowBlur = 8;
         ctx.shadowOffsetY = 3;
         ctx.fillStyle = 'rgba(0,0,0,0.25)';
-        ctx.fillRect(-blockW/2 + 2, 2, blockW - 4, 8);
+        ctx.fillRect(-blockW/2 + 2, 0, blockW - 4, 6);
         
         // Сброс тени для самого груза
         ctx.shadowColor = 'rgba(0,0,0,0.5)';
@@ -1021,6 +1073,61 @@
             ctx.fillText(label, labelX, labelY);
         }
         ctx.restore();
+    }
+
+    // Функция экспорта данных в CSV
+    function exportToCSV() {
+        if (state.history.length === 0) {
+            alert('Нет данных для экспорта. Запустите симуляцию и дождитесь накопления данных.');
+            return;
+        }
+
+        // Заголовки CSV
+        const headers = ['Время (с)', 'Позиция (м)', 'Скорость (м/с)', 'Ускорение (м/с²)', 'Статическое равновесие'];
+        
+        // Параметры эксперимента
+        const params = [
+            `Параметры эксперимента:`,
+            `Масса груза A: ${state.mA} кг`,
+            `Масса груза B: ${state.mB} кг`,
+            `Угол плоскости A: ${state.angA}°`,
+            `Угол плоскости B: ${state.angB}°`,
+            `Коэффициент трения A: ${state.muA}`,
+            `Коэффициент трения B: ${state.muB}`,
+            `Масса блока: ${state.M_p} кг`,
+            `Радиус блока: ${(state.R_p * 100).toFixed(1)} см`,
+            `Трение в оси: ${state.muAxle}`,
+            `Растяжимость нити: ${state.elasticity}%`,
+            `Использовать статическое трение: ${state.useStatic ? 'Да' : 'Нет'}`,
+            ``
+        ];
+
+        // Данные
+        const rows = state.history.map(point => [
+            point.t.toFixed(6),
+            point.pos.toFixed(6),
+            point.vel.toFixed(6),
+            point.acc.toFixed(6),
+            point.isStatic ? 'Да' : 'Нет'
+        ]);
+
+        // Объединяем все в CSV
+        const csvContent = [
+            ...params,
+            headers.join(','),
+            ...rows.map(row => row.join(','))
+        ].join('\n');
+
+        // Создаем и скачиваем файл
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `atwood_machine_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     // Run init
