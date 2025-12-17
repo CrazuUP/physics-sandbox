@@ -793,7 +793,7 @@
         let py = panelY + 50;
         
         // Функция для рисования блока информации (как на скриншоте)
-        const drawInfoBlock = (label, value, color = '#ffffff') => {
+        const drawInfoBlock = (label, value, color = '#ffffff', fontSize = 42) => {
             ctx.textAlign = 'left';
             
             // Заголовок (серый, маленький)
@@ -803,7 +803,7 @@
             py += 30; // Увеличил отступ с 22 до 30
             
             // Значение (КРУПНОЕ, цветное)
-            ctx.font = 'bold 42px monospace';
+            ctx.font = `bold ${fontSize}px monospace`;
             ctx.fillStyle = color;
             ctx.fillText(value, panelX + 15, py);
             py += 50;
@@ -824,7 +824,7 @@
             drawInfoBlock('ПЕРИГЕЙ', periVal.toString(), '#00ff44');
         } else if (!oe.isCircular && oe.rp > 0 && oe.rp < state.R_planet) {
             // Перигей внутри планеты - показываем предупреждение
-            drawInfoBlock('ПЕРИГЕЙ', 'СТОЛКНОВЕНИЕ', '#ff0000');
+            drawInfoBlock('ПЕРИГЕЙ', 'СТОЛКНОВЕНИЕ', '#ff0000', 32);
         }
         
         // Период
