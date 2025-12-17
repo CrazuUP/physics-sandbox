@@ -573,14 +573,7 @@
     initializeSimulation();
     renderAll();
     
-    // Автоматически запускаем симуляцию при загрузке
-    setTimeout(() => {
-        if (!state.running) {
-            state.running = true;
-            startBtn.textContent = 'Пауза';
-            requestAnimationFrame(loop);
-        }
-    }, 500);
+    // Автозапуск отключен - пользователь должен нажать кнопку "Запуск симуляции"
 
 })();
 
