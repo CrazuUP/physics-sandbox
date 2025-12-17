@@ -96,8 +96,8 @@
         if (resetBtn) resetBtn.addEventListener('click', () => {
             state.running = false;
             startBtn.textContent = "Запуск симуляции";
+            resetToDefaults();
             resetSimulation();
-            render();
         });
 
         window.addEventListener('resize', () => {
@@ -132,6 +132,31 @@
         const lenA = parseFloat(inputs.lengthA.value);
         const lenB = parseFloat(inputs.lengthB.value);
         state.limitPos = Math.min(lenA, lenB) * 0.9; 
+    }
+
+    function resetToDefaults() {
+        // Возвращаем значения полей ввода к начальным значениям из HTML
+        if (inputs.massA) inputs.massA.value = 6;
+        if (inputs.massB) inputs.massB.value = 2;
+        if (inputs.lengthA) inputs.lengthA.value = 3;
+        if (inputs.lengthB) inputs.lengthB.value = 3;
+        if (inputs.angleA) inputs.angleA.value = 30;
+        if (inputs.angleB) inputs.angleB.value = 10;
+        if (inputs.fricA) inputs.fricA.value = 0.15;
+        if (inputs.fricB) inputs.fricB.value = 0.12;
+        if (inputs.pulleyM) inputs.pulleyM.value = 1.5;
+        if (inputs.pulleyR) inputs.pulleyR.value = 6;
+        if (inputs.axleFric) inputs.axleFric.value = 0.05;
+        if (inputs.elasticity) inputs.elasticity.value = 0;
+        if (inputs.lockStatic) inputs.lockStatic.checked = false;
+        if (inputs.showComponents) inputs.showComponents.checked = true;
+        
+        // Обновляем выводы значений
+        for (const key in inputs) {
+            if (inputs[key]) {
+                updateOutput(key);
+            }
+        }
     }
 
     function resetSimulation() {
