@@ -34,6 +34,19 @@
     const showWorkCheckbox = document.getElementById('disk-show-work');
     const startBtn = document.getElementById('disk-start');
     const resetBtn = document.getElementById('disk-reset');
+    let downloadBtn = document.getElementById('disk-download-csv');
+    
+    // Создаем кнопку скачивания, если её нет
+    if (!downloadBtn) {
+        downloadBtn = document.createElement('button');
+        downloadBtn.id = 'disk-download-csv';
+        downloadBtn.type = 'button';
+        downloadBtn.className = 'action-btn';
+        downloadBtn.textContent = 'Скачать CSV';
+        if (resetBtn && resetBtn.parentNode) {
+            resetBtn.parentNode.appendChild(downloadBtn);
+        }
+    }
 
     const state = {
         running: false,
@@ -110,6 +123,10 @@
             readUItoState(true);
             initializeSimulation();
             renderAll();
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            exportToCSV();
         });
 
         [radiusInput, massInput, axisFrictionInput, initialOmegaInput, 
@@ -565,6 +582,58 @@
 
         renderAll();
         requestAnimationFrame(loop);
+    }
+
+    // Функция экспорта данных в CSV
+    function exportToCSV() {
+        if (state.omegaHistory.length === 0) {
+            alert('Нет данных для экспорта. Запустите симуляцию и дождитесь накопления данных.');
+            return;
+        }
+
+        // Заголовки CSV
+        const headers = ['Время (с)', 'Угловая скорость (рад/с)', 'Угловое ускорение (рад/с²)', 'Кинетическая энергия (Дж)', 'Работа (Дж)'];
+        
+        // Параметры эксперимента
+        const params = [
+            `Параметры эксперимента:`,
+            `Радиус диска: ${state.radius} м`,
+            `Масса диска: ${state.mass} кг`,
+            `Момент инерции: ${state.momentInertia.toFixed(3)} кг·м²`,
+            `Начальная угловая скорость: ${parseFloat(initialOmegaInput.value)} рад/с`,
+            `Внешний момент: ${state.torque} Н·м`,
+            `Коэффициент трения: ${state.friction}`,
+            `Трение в оси: ${state.axisFriction}`,
+            `Время наблюдения: ${state.observationTime} с`,
+            ``
+        ];
+
+        // Данные
+        const rows = state.omegaHistory.map(point => [
+            point.t.toFixed(6),
+            point.omega.toFixed(6),
+            point.alpha.toFixed(6),
+            point.Ekin.toFixed(6),
+            point.work.toFixed(6)
+        ]);
+
+        // Объединяем все в CSV
+        const csvContent = [
+            ...params,
+            headers.join(','),
+            ...rows.map(row => row.join(','))
+        ].join('\n');
+
+        // Создаем и скачиваем файл
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `disk_rotation_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     // Инициализация
