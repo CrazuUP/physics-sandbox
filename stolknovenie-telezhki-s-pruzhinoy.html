@@ -66,7 +66,7 @@
                     <th style="padding: 8px; border: 1px solid #ddd;">#</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">m (кг)</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">v0 (м/с)</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">k (Н/м)</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">v после (м/с)</th> <th style="padding: 8px; border: 1px solid #ddd;">k (Н/м)</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">Угол (°)</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">Max сжатие (м)</th>
                     <th style="padding: 8px; border: 1px solid #ddd;">Max Ek (Дж)</th>
@@ -136,7 +136,7 @@
                     </div>
 
                     <div class="parameter-control">
-                        <label for="cart-damping">Коэффициент потерь пружины</label>
+                        <label for="cart-damping">Коэффициент Демпфрирования</label>
                         <input type="range" id="cart-damping" name="damping" min="0" max="2" step="0.01" value="0.05">
                         <input type="number" id="cart-damping-number" min="0" max="2" step="0.01" value="0.05">
                         <output id="cart-damping-value" for="cart-damping">0.05</output>
@@ -145,7 +145,7 @@
                 <div class="checkbox-grid" role="group" aria-label="Режимы контакта">
                     <label>
                         <input type="checkbox" id="contact-lock" name="contact_lock">
-                        Режим «залипания»
+                        Неупругий захват
                     </label>
                     <label style="color: #000036; font-weight: bold;">
                         <input type="checkbox" id="slow-motion" name="slow_motion">
