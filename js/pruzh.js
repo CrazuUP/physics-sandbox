@@ -257,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const record = {
             m: m.toFixed(1),
             v0: v_initial.toFixed(1),
+            vAfter: bounced ? v_after.toFixed(2) : "—", // Записываем скорость отскока
             k: k.toFixed(0),
             angle: angle_deg ? angle_deg.toFixed(0) : 0,
             maxX: max_x.toFixed(3),
@@ -274,14 +275,15 @@ document.addEventListener('DOMContentLoaded', () => {
         experimentHistory.forEach((rec, index) => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${rec.m}</td>
-                <td>${rec.v0}</td>
-                <td>${rec.k}</td>
-                <td>${rec.angle}°</td>
-                <td>${rec.maxX}</td>
-                <td>${rec.maxEk}</td>
-            `;
+            <td>${index + 1}</td>
+            <td>${rec.m}</td>
+            <td>${rec.v0}</td>
+            <td style="font-weight: bold; color: #d9534f;">${rec.vAfter}</td>
+            <td>${rec.k}</td>
+            <td>${rec.angle}°</td>
+            <td>${rec.maxX}</td>
+            <td>${rec.maxEk}</td>
+        `;
             tableBody.appendChild(row);
         });
     }
@@ -311,22 +313,92 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.shadowColor = 'transparent'; ctx.lineWidth = 3;
     }
 
+    // --- НОВАЯ ФУНКЦИЯ РИСОВАНИЯ ТЕЛЕЖКИ ---
+    function drawRealisticCart(ctx, x, y, width, totalHeight) {
+        // Параметры
+        const wheelRadius = 12;
+        const chassisHeight = totalHeight - wheelRadius + 5; // Корпус чуть заходит на колеса
+        const chassisY = y - chassisHeight - wheelRadius + 5; // Верхняя Y координата корпуса
+        const wheelY = y - wheelRadius; // Центр колес (они стоят на y)
+
+        ctx.save();
+
+        // 1. Рисуем колеса (заднее и переднее)
+        function drawWheel(wx, wy) {
+            ctx.beginPath();
+            ctx.arc(wx, wy, wheelRadius, 0, Math.PI * 2);
+            // Шина
+            const tireGradient = ctx.createRadialGradient(wx, wy, wheelRadius * 0.5, wx, wy, wheelRadius);
+            tireGradient.addColorStop(0, '#444');
+            tireGradient.addColorStop(1, '#222');
+            ctx.fillStyle = tireGradient;
+            ctx.fill();
+            // Диск
+            ctx.beginPath();
+            ctx.arc(wx, wy, wheelRadius * 0.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#888';
+            ctx.fill();
+            ctx.strokeStyle = '#111';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+        // Заднее колесо
+        drawWheel(x + wheelRadius, wheelY);
+        // Переднее колесо
+        drawWheel(x + width - wheelRadius, wheelY);
+
+        // 2. Рисуем корпус (шасси)
+        const bodyGradient = ctx.createLinearGradient(x, chassisY, x, chassisY + chassisHeight);
+        bodyGradient.addColorStop(0, '#c0c0c0'); // Светло-серый верх
+        bodyGradient.addColorStop(0.5, '#a0a0a0'); // Середина
+        bodyGradient.addColorStop(1, '#808080'); // Темно-серый низ
+
+        ctx.fillStyle = bodyGradient;
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 2;
+
+        // Используем roundRect если поддерживается, иначе обычный rect
+        if (ctx.roundRect) {
+            ctx.beginPath();
+            ctx.roundRect(x, chassisY, width, chassisHeight, 8);
+            ctx.fill();
+            ctx.stroke();
+        } else {
+            ctx.fillRect(x, chassisY, width, chassisHeight);
+            ctx.strokeRect(x, chassisY, width, chassisHeight);
+        }
+
+        // 3. Детали на корпусе (имитация слотов для грузов или крепежа)
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(x + 15, chassisY + 5, width - 30, 5);
+        ctx.fillStyle = '#ddd';
+        // Пару "болтов" сверху
+        ctx.beginPath(); ctx.arc(x + 10, chassisY + 5, 3, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + width - 10, chassisY + 5, 3, 0, Math.PI*2); ctx.fill();
+
+
+        // 4. Бампер спереди (справа) для контакта с пружиной
+        ctx.fillStyle = '#333'; // Черная резина
+        ctx.fillRect(x + width - 2, chassisY + 10, 4, chassisHeight - 20);
+
+        ctx.restore();
+    }
+// --- КОНЕЦ НОВОЙ ФУНКЦИИ ---
+
     function animate(time) {
         requestAnimationFrame(animate);
         if (paused) return;
-
         let dt = (time - lastTime) / 1000;
         lastTime = time;
         if (dt > 0.05) dt = 0.05;
-
         let real_dt = dt;
         let sim_dt = dt;
         if (slow_motion) sim_dt = dt * 0.1;
-
         if (countdown > 0) {
             countdown -= real_dt;
             draw();
-            ctx.fillStyle = '#000'; ctx.font = 'bold 40px Arial'; ctx.fillText(Math.ceil(countdown), 450, 100);
+            ctx.fillStyle = '#000'; ctx.font = 'bold 40px Arial';
+            ctx.fillText(Math.ceil(countdown), 450, 100);
             if (countdown <= 0) { countdown = 0; t = 0; }
             return;
         }
@@ -440,9 +512,12 @@ document.addEventListener('DOMContentLoaded', () => {
         drawSpring(ctx, left_end, 200 - 25, wall_px);
 
         // Тележка
+        // Тележка
         let cart_right = spring_rest_px + x * scale;
         let cart_left = cart_right - cart_width;
-        ctx.fillStyle = '#00f'; ctx.fillRect(cart_left, 200 - 50, cart_width, 50);
+// Заменяем старый прямоугольник на новую функцию рисования
+// Передаем координату Y трека (200) и желаемую высоту тележки (50)
+        drawRealisticCart(ctx, cart_left, 200, cart_width, 50);
 
         ctx.restore();
 
@@ -466,6 +541,11 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText(`E_kin: ${cur_ek.toFixed(2)} Дж`, 20, 55);
         ctx.fillText(`E_pot: ${cur_epr.toFixed(2)} Дж`, 20, 75);
         ctx.fillText(`F_spring: ${cur_force.toFixed(2)} Н`, 20, 95);
+
+        if (bounced) {
+            ctx.fillStyle = '#d9534f'; // Выделим красным цветом
+            ctx.fillText(`V после контакта: ${v_after.toFixed(2)} м/с`, 20, 115);
+        }
 
         // Координаты (чуть ниже)
         ctx.fillStyle = '#444';
@@ -541,8 +621,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (is_energy) {
             ctx.fillStyle = color1; ctx.beginPath(); ctx.arc(left + 20, top - 10, 3, 0, 2*Math.PI); ctx.fill();
             ctx.fillStyle = '#000'; ctx.font='12px Arial'; ctx.fillText('E kin', left + 30, top -5);
-            ctx.fillStyle = color2; ctx.beginPath(); ctx.arc(left + 80, top -5 , 3, 0, 2*Math.PI); ctx.fill();
-            ctx.fillStyle = '#000'; ctx.fillText('E pot', left + 90, top - 10);
+            ctx.fillStyle = color2; ctx.beginPath(); ctx.arc(left + 80, top -10 , 3, 0, 2*Math.PI); ctx.fill();
+            ctx.fillStyle = '#000'; ctx.fillText('E pot', left + 90, top - 5);
         }
     }
 });
