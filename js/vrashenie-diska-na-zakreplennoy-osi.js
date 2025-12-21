@@ -35,7 +35,7 @@
     const startBtn = document.getElementById('disk-start');
     const resetBtn = document.getElementById('disk-reset');
     let downloadBtn = document.getElementById('disk-download-csv');
-    
+
     // Создаем кнопку скачивания, если её нет
     if (!downloadBtn) {
         downloadBtn = document.createElement('button');
@@ -50,6 +50,7 @@
 
     const state = {
         running: false,
+        countdown: 0, // Добавлено для отсчета
         // Параметры диска
         radius: 0.4, // м
         mass: 8, // кг
@@ -108,6 +109,7 @@
             if (!state.running) {
                 readUItoState();
                 initializeSimulation();
+                state.countdown = 3; // Начать отсчет 3 секунды
                 state.running = true;
                 startBtn.textContent = 'Пауза';
                 requestAnimationFrame(loop);
@@ -129,8 +131,8 @@
             exportToCSV();
         });
 
-        [radiusInput, massInput, axisFrictionInput, initialOmegaInput, 
-         torqueInput, frictionInput, observationTimeInput].forEach(inp => {
+        [radiusInput, massInput, axisFrictionInput, initialOmegaInput,
+            torqueInput, frictionInput, observationTimeInput].forEach(inp => {
             inp.addEventListener('input', () => {
                 readUItoState();
                 updateMomentInertia();
@@ -157,7 +159,7 @@
         state.torque = parseFloat(torqueInput.value);
         state.friction = parseFloat(frictionInput.value);
         state.observationTime = parseFloat(observationTimeInput.value);
-        
+
         if (resetGraphs) {
             state.omegaHistory = [];
             state.t = 0;
@@ -181,7 +183,7 @@
         state.totalWork = 0;
         state.stopTime = null;
         updateMomentInertia();
-        
+
         // Инициализируем историю
         const Ekin = 0.5 * state.momentInertia * state.omega * state.omega;
         state.omegaHistory = [{ t: 0, omega: state.omega, alpha: 0, Ekin: Ekin, work: 0 }];
@@ -190,13 +192,13 @@
     function computeAngularAcceleration(omega, torque, friction, axisFriction, momentInertia) {
         // Момент сил трения в оси (постоянный)
         const torqueFrictionAxis = -Math.sign(omega) * axisFriction * momentInertia;
-        
+
         // Момент вязкого сопротивления (пропорционален угловой скорости)
         const torqueFrictionViscous = -friction * omega;
-        
+
         // Суммарный момент
         const totalTorque = torque + torqueFrictionAxis + torqueFrictionViscous;
-        
+
         // Угловое ускорение: α = τ / I
         return totalTorque / momentInertia;
     }
@@ -210,20 +212,20 @@
             state.axisFriction,
             state.momentInertia
         );
-        
+
         // Обновляем угловую скорость и угол (метод Эйлера)
         state.omega += state.alpha * dt;
         state.theta += state.omega * dt;
-        
+
         // Нормализуем угол
         state.theta = state.theta % TWO_PI;
         if (state.theta < 0) state.theta += TWO_PI;
-        
+
         // Вычисляем работу внешнего момента
         if (showWorkCheckbox.checked) {
             state.totalWork += state.torque * state.omega * dt;
         }
-        
+
         state.t += dt;
 
         // Сэмплируем данные для графиков
@@ -237,12 +239,12 @@
                 Ekin: Ekin,
                 work: state.totalWork
             });
-            
+
             // Ограничиваем размер истории
             if (state.omegaHistory.length > MAX_GRAPH_POINTS) {
                 state.omegaHistory.shift();
             }
-            
+
             state.lastGraphSampleAcc = 0;
         }
 
@@ -326,7 +328,7 @@
         // Диск
         const diskX = centerX;
         const diskY = centerY;
-        
+
         // Тень диска
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         ctx.beginPath();
@@ -369,14 +371,14 @@
             const arrowAngle = state.theta + Math.PI / 2;
             const arrowX = diskX + Math.cos(arrowAngle) * arrowLength;
             const arrowY = diskY + Math.sin(arrowAngle) * arrowLength;
-            
+
             ctx.strokeStyle = state.omega > 0 ? '#00ff00' : '#ff0000';
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.moveTo(diskX, diskY);
             ctx.lineTo(arrowX, arrowY);
             ctx.stroke();
-            
+
             // Наконечник стрелки
             const tipAngle = arrowAngle + (state.omega > 0 ? -0.3 : 0.3);
             const tipX = arrowX + Math.cos(tipAngle) * 8;
@@ -391,17 +393,17 @@
         ctx.fillStyle = '#000';
         ctx.font = 'bold 12px sans-serif';
         ctx.fillText('Диск', centerX - 20, y + 20);
-        
+
         ctx.font = '10px sans-serif';
         ctx.fillStyle = '#333';
         ctx.fillText(`θ = ${(state.theta * 180 / Math.PI).toFixed(1)}°`, x + 10, y + 20);
         ctx.fillText(`ω = ${state.omega.toFixed(2)} рад/с`, x + 10, y + 35);
         ctx.fillText(`α = ${state.alpha.toFixed(2)} рад/с²`, x + 10, y + 50);
-        
+
         // Кинетическая энергия
         const Ekin = 0.5 * state.momentInertia * state.omega * state.omega;
         ctx.fillText(`Eкин = ${Ekin.toFixed(2)} Дж`, x + 10, y + 65);
-        
+
         if (state.stopTime !== null) {
             ctx.fillStyle = '#ff0000';
             ctx.font = 'bold 10px sans-serif';
@@ -411,12 +413,23 @@
             ctx.font = '10px sans-serif';
             ctx.fillText('Замедление...', x + 10, y + 80);
         }
-        
+
         // Внешний момент
         if (Math.abs(state.torque) > 0.1) {
             ctx.fillStyle = state.torque > 0 ? '#00aa00' : '#aa0000';
             ctx.font = '9px sans-serif';
             ctx.fillText(`τ = ${state.torque.toFixed(1)} Н·м`, x + w - 120, y + 20);
+        }
+
+        // Отображение отсчета, если активен
+        if (state.countdown > 0) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.font = 'bold 48px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(Math.ceil(state.countdown).toString(), centerX, centerY);
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
         }
     }
 
@@ -438,47 +451,79 @@
 
         // Определяем диапазоны данных
         let maxT = Math.max(state.t, state.observationTime);
-        let minOmega = 0, maxOmega = 0;
-        let minEkin = 0, maxEkin = 0;
-        let maxWork = 0;
+        let minOmega = Infinity, maxOmega = -Infinity;
+        let minEkin = Infinity, maxEkin = -Infinity;
+        let minWork = Infinity, maxWork = -Infinity;
 
         state.omegaHistory.forEach(p => {
             minOmega = Math.min(minOmega, p.omega);
-            maxOmega = Math.max(maxOmega, Math.abs(p.omega));
+            maxOmega = Math.max(maxOmega, p.omega);
             minEkin = Math.min(minEkin, p.Ekin);
             maxEkin = Math.max(maxEkin, p.Ekin);
-            maxWork = Math.max(maxWork, Math.abs(p.work));
+            minWork = Math.min(minWork, p.work);
+            maxWork = Math.max(maxWork, p.work);
         });
 
-        // Нормализуем диапазоны
-        maxOmega = Math.max(maxOmega, 1);
-        maxEkin = Math.max(maxEkin, 1);
-        maxWork = Math.max(maxWork, 1);
+        // Нормализуем диапазоны, избегая нулевого диапазона
+        const omegaRange = maxOmega - minOmega || 1;
+        const ekinRange = maxEkin - minEkin || 1;
+        const workRange = maxWork - minWork || 1;
 
         // Сетка и оси
         ctx.strokeStyle = '#eee';
         ctx.lineWidth = 1;
-        for (let i = 0; i <= 5; i++) {
-            const ty = graphY + (graphH * i / 5);
+
+        const numDiv = 10; // Больше делений (было 5, теперь 10)
+
+        // Горизонтальные линии (Y-деления)
+        for (let i = 0; i <= numDiv; i++) {
+            const ty = graphY + (graphH * i / numDiv);
             ctx.beginPath();
             ctx.moveTo(graphX, ty);
             ctx.lineTo(graphX + graphW, ty);
             ctx.stroke();
         }
 
-        // Ось времени
+        // Вертикальные линии (X-деления)
+        for (let i = 0; i <= numDiv; i++) {
+            const tx = graphX + (graphW * i / numDiv);
+            ctx.beginPath();
+            ctx.moveTo(tx, graphY);
+            ctx.lineTo(tx, graphY + graphH);
+            ctx.stroke();
+        }
+
+        // Оси
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(graphX, graphY + graphH);
         ctx.lineTo(graphX + graphW, graphY + graphH);
+        ctx.moveTo(graphX, graphY);
+        ctx.lineTo(graphX, graphY + graphH);
         ctx.stroke();
 
-        // Подписи осей
+        // Подписи осей (X - время)
         ctx.fillStyle = '#333';
         ctx.font = '10px sans-serif';
-        ctx.fillText('0', graphX - 15, graphY + graphH + 5);
-        ctx.fillText(`${maxT.toFixed(1)} с`, graphX + graphW - 30, graphY + graphH + 5);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        for (let i = 0; i <= numDiv; i += 2) { // Каждое второе, чтобы не залезали
+            const tx = graphX + (graphW * i / numDiv);
+            const value = (maxT * i / numDiv).toFixed(1);
+            ctx.fillText(value, tx, graphY + graphH + 5);
+        }
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+
+        // Подписи осей (Y - для omega, слева)
+        ctx.textAlign = 'right';
+        for (let i = 0; i <= numDiv; i += 2) { // Каждое второе, чтобы не залезали
+            const ty = graphY + (graphH * i / numDiv);
+            const value = (maxOmega - (omegaRange * i / numDiv)).toFixed(1);
+            ctx.fillText(value, graphX - 5, ty + 3);
+        }
+        ctx.textAlign = 'left';
 
         // График угловой скорости
         if (state.omegaHistory.length > 1) {
@@ -488,7 +533,8 @@
             for (let i = 0; i < state.omegaHistory.length; i++) {
                 const p = state.omegaHistory[i];
                 const px = graphX + (p.t / maxT) * graphW;
-                const py = graphY + graphH - (p.omega / maxOmega) * graphH;
+                const norm = (p.omega - minOmega) / omegaRange;
+                const py = graphY + graphH - norm * graphH;
                 if (i === 0) ctx.moveTo(px, py);
                 else ctx.lineTo(px, py);
             }
@@ -504,7 +550,8 @@
             for (let i = 0; i < state.omegaHistory.length; i++) {
                 const p = state.omegaHistory[i];
                 const px = graphX + (p.t / maxT) * graphW;
-                const py = graphY + graphH - (p.Ekin / maxEkin) * graphH;
+                const norm = (p.Ekin - minEkin) / ekinRange;
+                const py = graphY + graphH - norm * graphH;
                 if (i === 0) ctx.moveTo(px, py);
                 else ctx.lineTo(px, py);
             }
@@ -521,7 +568,8 @@
             for (let i = 0; i < state.omegaHistory.length; i++) {
                 const p = state.omegaHistory[i];
                 const px = graphX + (p.t / maxT) * graphW;
-                const py = graphY + graphH - (p.work / maxWork) * graphH;
+                const norm = (p.work - minWork) / workRange;
+                const py = graphY + graphH - norm * graphH;
                 if (i === 0) ctx.moveTo(px, py);
                 else ctx.lineTo(px, py);
             }
@@ -533,12 +581,12 @@
         ctx.font = '10px sans-serif';
         ctx.fillStyle = '#0066cc';
         ctx.fillText('ω (рад/с)', graphX + graphW - 100, graphY + 15);
-        
+
         if (showEnergyCheckbox.checked) {
             ctx.fillStyle = '#00aa00';
             ctx.fillText('Eкин (Дж)', graphX + graphW - 100, graphY + 28);
         }
-        
+
         if (showWorkCheckbox.checked) {
             ctx.fillStyle = '#ff6600';
             ctx.fillText('Работа (Дж)', graphX + graphW - 100, graphY + 41);
@@ -567,6 +615,14 @@
         const realDt = Math.min(0.05, (ts - lastFrameTs) / 1000);
         lastFrameTs = ts;
 
+        if (state.countdown > 0) {
+            state.countdown -= realDt;
+            if (state.countdown < 0) state.countdown = 0;
+            renderAll();
+            requestAnimationFrame(loop);
+            return;
+        }
+
         let acc = realDt;
         while (acc > 0) {
             const dt = Math.min(acc, SIM_TARGET_DT);
@@ -593,7 +649,7 @@
 
         // Заголовки CSV
         const headers = ['Время (с)', 'Угловая скорость (рад/с)', 'Угловое ускорение (рад/с²)', 'Кинетическая энергия (Дж)', 'Работа (Дж)'];
-        
+
         // Параметры эксперимента
         const params = [
             `Параметры эксперимента:`,
@@ -641,8 +697,7 @@
     readUItoState(true);
     initializeSimulation();
     renderAll();
-    
+
     // Автозапуск отключен - пользователь должен нажать кнопку "Запуск симуляции"
 
 })();
-
