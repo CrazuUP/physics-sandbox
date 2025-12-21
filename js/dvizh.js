@@ -101,7 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
         totalFrictionWork: 0,
         lastFrameTime: 0,
         history: [],
-        trail: []
+        trail: [],
+        countdown: 0
     };
 
     // Начальная установка
@@ -121,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sim.totalFrictionWork = 0;
         sim.history = [];
         sim.trail = [];
+        sim.countdown = 0;
         btnStart.textContent = "Запуск";
         drawScene();
     }
@@ -302,8 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Векторы
 
-
-
             if (checkboxes.vectors.checked) {
                 drawVectors(ctx, currentPx + boxW/2, -boxH/2, params, sim.v);
             }
@@ -311,15 +311,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ctx.restore();
 
+        // Отсчет на экране
+        if (sim.countdown > 0) {
+            ctx.save();
+            ctx.font = 'bold 100px Arial';
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(Math.ceil(sim.countdown), canvas.width / 2, canvas.height / 2);
+            ctx.restore();
+        }
+
         // Статистика
         const statsBlock = document.getElementById('stats-block');
         if (statsBlock) {
-            statsBlock.innerHTML = `
-    <p>t = ${sim.t.toFixed(2)} с</p>
-    <p>x = ${sim.x.toFixed(2)} м</p>
-    <p>v = ${sim.v.toFixed(2)} м/с</p>
-    <p>Aтр = ${sim.totalFrictionWork.toFixed(0)} Дж</p>
-    `;
+            if (sim.countdown > 0) {
+                statsBlock.innerHTML = `
+                    <p>Отсчет: ${Math.ceil(sim.countdown)}</p>
+                    <p>t = 0.00 с</p>
+                    <p>x = ${sim.x.toFixed(2)} м</p>
+                    <p>v = 0.00 м/с</p>
+                    <p>Aтр = 0 Дж</p>
+                `;
+            } else {
+                statsBlock.innerHTML = `
+                    <p>t = ${sim.t.toFixed(2)} с</p>
+                    <p>x = ${sim.x.toFixed(2)} м</p>
+                    <p>v = ${sim.v.toFixed(2)} м/с</p>
+                    <p>Aтр = ${sim.totalFrictionWork.toFixed(0)} Дж</p>
+                `;
+            }
         }
     }
 
@@ -527,7 +548,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const dt = (timestamp - sim.lastFrameTime) / 1000;
         sim.lastFrameTime = timestamp;
 
-        if (sim.running) {
+        if (sim.countdown > 0) {
+            sim.countdown -= dt;
+            if (sim.countdown <= 0) {
+                sim.countdown = 0;
+                sim.running = true;
+                btnStart.textContent = "Пауза";
+            }
+        } else if (sim.running) {
             // Ограничиваем dt, чтобы не было гигантского шага после долгой паузы
             updatePhysics(Math.min(dt, 0.05));
         }
@@ -536,10 +564,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     btnStart.addEventListener('click', () => {
-        if (sim.finished) resetSim();
-        sim.running = !sim.running;
-        btnStart.textContent = sim.running ? "Пауза" : "Запуск";
-        sim.lastFrameTime = performance.now();
+        if (sim.finished) {
+            resetSim();
+        }
+
+        if (sim.running || sim.countdown > 0) {
+            sim.running = false;
+            sim.countdown = 0;
+            btnStart.textContent = "Запуск";
+        } else {
+            if (sim.t === 0) {
+                sim.countdown = 3;
+                btnStart.textContent = "Отмена";
+            } else {
+                sim.running = true;
+                btnStart.textContent = "Пауза";
+            }
+            sim.lastFrameTime = performance.now();
+        }
     });
 
     btnReset.addEventListener('click', resetSim);
