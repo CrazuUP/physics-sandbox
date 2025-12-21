@@ -387,14 +387,23 @@
     }
     
     // ========== ЗАПИСЬ ГРАФИКОВ ==========
+    // Записывает данные для графиков энергии и момента импульса
+    // Энергия E = K + U, где:
+    //   K = ½mv² - кинетическая энергия (зависит от скорости)
+    //   U = -GMm/r - потенциальная энергия (отрицательная, зависит от расстояния)
+    // Момент импульса L = m·(x·vᵧ - y·vₓ) - сохраняется при отсутствии внешних сил
     function recordGraph() {
-        const r = Math.sqrt(state.x**2 + state.y**2);
-        const v2 = state.vx**2 + state.vy**2;
+        const r = Math.sqrt(state.x**2 + state.y**2); // Расстояние до центра планеты (м)
+        const v2 = state.vx**2 + state.vy**2; // Квадрат скорости (м²/с²)
         
+        // Кинетическая энергия: K = ½mv² (Дж)
         const K = 0.5 * state.m * v2;
+        // Потенциальная энергия: U = -GMm/r (Дж, отрицательная для притяжения)
         const U = -G * state.M * state.m / r;
+        // Полная энергия: E = K + U (Дж)
         const E = K + U;
         
+        // Момент импульса: L = m·(x·vᵧ - y·vₓ) (кг·м²/с)
         const L = state.m * (state.x * state.vy - state.y * state.vx);
         
         state.graphData.push({ t: state.t, E, L });
@@ -445,7 +454,7 @@
         const H = graphCanvas.height / (window.devicePixelRatio || 1);
         graphCtx.clearRect(0, 0, W, H);
         
-        const pad = 50;
+        const pad = 60; // Увеличил отступ для лучшей читаемости
         const gw = W - 2*pad;
         const gh = H - 2*pad;
         
@@ -494,7 +503,7 @@
             
             // Подпись времени
             if (i === 0 || i === numVerticalLines || i % 2 === 0) {
-                graphCtx.fillText(t.toFixed(1) + ' с', x, pad + gh + 5);
+                graphCtx.fillText(t.toFixed(1) + ' с', x, pad + gh + 8);
             }
         }
         
@@ -516,8 +525,8 @@
             if (i === 0 || i === numHorizontalLines || i % 2 === 0) {
                 graphCtx.textAlign = 'right';
                 graphCtx.textBaseline = 'middle';
-                graphCtx.font = '9px monospace';
-                graphCtx.fillText(value.toExponential(2), pad - 8, y);
+                graphCtx.font = '10px monospace';
+                graphCtx.fillText(value.toExponential(2), pad - 10, y);
             }
         }
         
@@ -531,8 +540,8 @@
             if (i === 0 || i === numHorizontalLines || i % 2 === 0) {
                 graphCtx.textAlign = 'left';
                 graphCtx.textBaseline = 'middle';
-                graphCtx.font = '9px monospace';
-                graphCtx.fillText(value.toExponential(2), pad + gw + 8, y);
+                graphCtx.font = '10px monospace';
+                graphCtx.fillText(value.toExponential(2), pad + gw + 10, y);
             }
         }
         
@@ -550,8 +559,8 @@
         
         // Подпись оси времени
         graphCtx.fillStyle = '#333';
-        graphCtx.font = 'bold 12px sans-serif';
-        graphCtx.fillText('Время (с)', pad + gw/2, pad + gh + 25);
+        graphCtx.font = 'bold 13px sans-serif';
+        graphCtx.fillText('Время t (секунды)', pad + gw/2, pad + gh + 28);
         
         // Ось энергии (слева)
         graphCtx.beginPath();
@@ -561,9 +570,10 @@
         
         // Подпись оси энергии
         graphCtx.save();
-        graphCtx.translate(15, pad + gh/2);
+        graphCtx.translate(20, pad + gh/2);
         graphCtx.rotate(-Math.PI/2);
-        graphCtx.fillText('Энергия (Дж)', 0, 0);
+        graphCtx.font = 'bold 13px sans-serif';
+        graphCtx.fillText('Полная энергия E (Дж)', 0, 0);
         graphCtx.restore();
         
         // Ось момента импульса (справа)
@@ -574,9 +584,10 @@
         
         // Подпись оси момента импульса
         graphCtx.save();
-        graphCtx.translate(W - 15, pad + gh/2);
+        graphCtx.translate(W - 20, pad + gh/2);
         graphCtx.rotate(-Math.PI/2);
-        graphCtx.fillText('Момент импульса', 0, 0);
+        graphCtx.font = 'bold 13px sans-serif';
+        graphCtx.fillText('Момент импульса L (кг·м²/с)', 0, 0);
         graphCtx.restore();
         
         graphCtx.textAlign = 'left';
@@ -606,12 +617,80 @@
         });
         graphCtx.stroke();
         
-        // Легенда
-        graphCtx.font = '11px monospace';
+        // Легенда с подробной информацией
+        const lastData = state.graphData[state.graphData.length - 1];
+        const firstData = state.graphData[0];
+        
+        // Фон для легенды (полупрозрачный белый)
+        graphCtx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+        const legendW = Math.min(380, gw - 20);
+        const legendH = 100;
+        graphCtx.fillRect(pad + gw - legendW - 5, pad + 5, legendW, legendH);
+        graphCtx.strokeStyle = '#999';
+        graphCtx.lineWidth = 1.5;
+        graphCtx.strokeRect(pad + gw - legendW - 5, pad + 5, legendW, legendH);
+        
+        const legendX = pad + gw - legendW;
+        let legendY = pad + 12;
+        
+        // Заголовок легенды
+        graphCtx.font = 'bold 11px sans-serif';
+        graphCtx.fillStyle = '#333';
+        graphCtx.textAlign = 'left';
+        graphCtx.fillText('Текущие значения:', legendX + 8, legendY);
+        legendY += 18;
+        
+        // Текущие значения энергии
+        graphCtx.font = 'bold 10px sans-serif';
         graphCtx.fillStyle = '#007bff';
-        graphCtx.fillText(`E: ${state.graphData[state.graphData.length-1].E.toExponential(2)} J`, pad+5, pad+15);
+        graphCtx.fillText('E =', legendX + 8, legendY);
+        graphCtx.font = '10px monospace';
+        graphCtx.fillText(`${lastData.E.toExponential(2)} Дж`, legendX + 35, legendY);
+        
+        // Изменение энергии
+        const dE = lastData.E - firstData.E;
+        const dEPercent = Math.abs(dE / Math.abs(firstData.E)) * 100;
+        graphCtx.font = '9px sans-serif';
+        graphCtx.fillStyle = Math.abs(dEPercent) < 0.001 ? '#388e3c' : (dE < 0 ? '#d32f2f' : '#f57c00');
+        const changeText = Math.abs(dEPercent) < 0.001 
+            ? '✓ Сохраняется' 
+            : `Δ = ${dE >= 0 ? '+' : ''}${dE.toExponential(2)} Дж (${dEPercent.toFixed(4)}%)`;
+        graphCtx.fillText(changeText, legendX + 180, legendY);
+        legendY += 16;
+        
+        // Текущие значения момента импульса
+        graphCtx.font = 'bold 10px sans-serif';
         graphCtx.fillStyle = '#ff8800';
-        graphCtx.fillText(`L: ${Math.abs(state.graphData[state.graphData.length-1].L).toExponential(2)}`, pad+5, pad+30);
+        graphCtx.fillText('L =', legendX + 8, legendY);
+        graphCtx.font = '10px monospace';
+        graphCtx.fillText(`${Math.abs(lastData.L).toExponential(2)} кг·м²/с`, legendX + 35, legendY);
+        
+        // Изменение момента импульса
+        const dL = Math.abs(lastData.L) - Math.abs(firstData.L);
+        const dLPercent = Math.abs(dL / Math.abs(firstData.L)) * 100;
+        graphCtx.font = '9px sans-serif';
+        graphCtx.fillStyle = Math.abs(dLPercent) < 0.001 ? '#388e3c' : (dL < 0 ? '#d32f2f' : '#f57c00');
+        const changeLText = Math.abs(dLPercent) < 0.001 
+            ? '✓ Сохраняется' 
+            : `Δ = ${dL >= 0 ? '+' : ''}${dL.toExponential(2)} (${dLPercent.toFixed(4)}%)`;
+        graphCtx.fillText(changeLText, legendX + 180, legendY);
+        legendY += 16;
+        
+        // Индикатор сохранения
+        graphCtx.font = '9px sans-serif';
+        if (state.drag === 0) {
+            graphCtx.fillStyle = '#388e3c';
+            graphCtx.fillText('✓ Нет сопротивления → E и L сохраняются', legendX + 8, legendY);
+        } else {
+            graphCtx.fillStyle = '#f57c00';
+            graphCtx.fillText(`⚠ Сопротивление (drag=${state.drag}) → E и L уменьшаются`, legendX + 8, legendY);
+        }
+        legendY += 14;
+        
+        // Информация о расчетах
+        graphCtx.font = '8px sans-serif';
+        graphCtx.fillStyle = '#666';
+        graphCtx.fillText(`m = ${(state.m / MOON_MASS).toFixed(3)} × M_Луны`, legendX + 8, legendY);
     }
     
     // ========== ГЛАВНЫЙ РЕНДЕРИНГ ==========
